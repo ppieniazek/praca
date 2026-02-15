@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}
+  Dashboard - PAVER-OS
+{% endblock title %}
+{% block content %}
+  <div class="hero min-h-[50vh] bg-base-200">
+    <div class="hero-content text-center">
+      <div class="max-w-md">
+        <h1 class="text-5xl font-bold">Witaj!</h1>
+        <p class="py-6">
+          Zalogowano jako: <strong>{{ user.email }}</strong>
+        </p>
+        <p class="mb-6">
+          Twoja organizacja: <span class="badge badge-primary badge-lg">{{ user.organization.name }}</span>
+        </p>
+        <p class="text-sm text-gray-500">To jest dashboard. Tu pojawią się funkcje aplikacji.</p>
+      </div>
+    </div>
+  </div>
+{% endblock content %}

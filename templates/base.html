@@ -1,0 +1,152 @@
+{% load i18n %}
+
+{% partialdef non_field_errors %}
+  {% if form.non_field_errors %}
+    <div class="alert alert-error mb-4" role="alert">
+      {% for error in form.non_field_errors %}<span>{{ error }}</span>{% endfor %}
+    </div>
+  {% endif %}
+{% endpartialdef %}
+
+{% partialdef form_field %}
+  <div class="form-control w-full {{ wrapper_class }}">
+    <label class="label" for="id_{{ field.name }}">
+      <span class="label-text">{{ field.label }}</span>
+    </label>
+    <input type="{{ field.field.widget.input_type|default:'text' }}"
+           name="{{ field.name }}"
+           id="id_{{ field.name }}"
+           class="input input-bordered w-full {% if field.errors %}input-error{% endif %} {{ input_class }}"
+           value="{{ field.value|default:'' }}"
+           {% if field.field.required %}required{% endif %} />
+    {% if field.errors %}
+      <label class="label" for="id_{{ field.name }}">
+        <span class="label-text-alt text-error">{{ field.errors.0 }}</span>
+      </label>
+    {% endif %}
+  </div>
+{% endpartialdef %}
+
+{% partialdef toast_messages %}
+  {% if messages %}
+    <div id="toast-container" class="toast toast-top toast-center z-50">
+      {% for message in messages %}
+        <!-- animate-fade-out: waits 4s, then fades out over 0.5s. Removed on end. -->
+        <div class="alert {% if message.tags %}alert-{{ message.tags }}{% else %}alert-info{% endif %} shadow-lg animate-fade-out"
+             data-on:animationend="$el.remove()">
+          <span>{{ message }}</span>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div id="toast-container"></div>
+  {% endif %}
+{% endpartialdef %}
+
+<!DOCTYPE html>
+<html lang="pl" data-theme="light">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+      {% block title %}
+        PAVER-OS
+      {% endblock title %}
+    </title>
+    <!-- DaisyUI v5 & Tailwind CSS v4 -->
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5"
+          rel="stylesheet"
+          type="text/css" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Datastar -->
+    <script type="module"
+            src="https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.7/bundles/datastar.js"></script>
+    <style>
+        @keyframes fade-out {
+            from {
+                opacity: 1;
+            }
+
+            to {
+                opacity: 0;
+            }
+        }
+
+        .animate-fade-out {
+            animation: fade-out 0.5s ease-out 4s forwards;
+        }
+    </style>
+    <script>
+        // Init theme early to prevent flash (Logic kept in head for perf, but isolated)
+        (function() {
+            const theme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
+  </head>
+  <body class="min-h-screen bg-base-200 flex flex-col"
+        data-signals="{is_dark: localStorage.getItem('theme') === 'dark'}"
+        data-effect="const t = $is_dark ? 'dark' : 'light'; document.documentElement.setAttribute('data-theme', t); localStorage.setItem('theme', t)">
+    <!-- Navbar -->
+    <div class="navbar bg-base-100 shadow-sm">
+      <div class="flex-1">
+        <a href="{% url 'core:dashboard' %}" class="btn btn-ghost text-xl">PAVER-OS</a>
+      </div>
+      <div class="flex-none gap-2">
+        <!-- Theme Toggle -->
+        <label class="swap swap-rotate btn btn-ghost btn-circle">
+          <!-- this hidden checkbox controls the state -->
+          <input type="checkbox"
+                 class="theme-controller"
+                 aria-label="Przełącz tryb ciemny"
+                 data-bind="is_dark" />
+          <!-- sun icon -->
+          <svg class="swap-off fill-current w-5 h-5"
+               xmlns="http://www.w3.org/2000/svg"
+               viewBox="0 0 24 24">
+            <path d="M5.64,17l-.71.71a1,1,0,0,0,0,1.41,1,1,0,0,0,1.41,0l.71-.71A1,1,0,0,0,5.64,17ZM5,12a1,1,0,0,0-1-1H3a1,1,0,0,0,0,2H4A1,1,0,0,0,5,12Zm7-7a1,1,0,0,0,1-1V3a1,1,0,0,0-2,0V4A1,1,0,0,0,12,5ZM5.64,7.05a1,1,0,0,0,.7.29,1,1,0,0,0,.71-.29,1,1,0,0,0,0-1.41l-.71-.71A1,1,0,0,0,4.93,4.93l.71.71A1,1,0,0,0,5.64,7.05Zm15.37,9.19A6,6,0,0,0,4.64,8.51,6,6,0,0,0,21,16.24Zm-9.69-.29A4,4,0,0,1,16,11.3a4.05,4.05,0,0,1,1.11,2.83,4,4,0,0,1-3.33,3.91,6.08,6.08,0,0,0,2.15-1.95A4,4,0,0,1,11.33,16.24Zm6-.16a1,1,0,0,0-1.41,0L15.2,16.79a1,1,0,0,0,1.41,1.41l.71-.71A1,1,0,0,0,17.29,16.08Zm.71-8.32a1,1,0,0,0,0,1.41l.71.71a1,1,0,0,0,1.41-1.41l-.71-.71A1,1,0,0,0,18,7.76ZM12,19a1,1,0,0,0-1,1v1a1,1,0,0,0,2,0V20A1,1,0,0,0,12,19ZM19,11h1a1,1,0,0,0,0-2H19a1,1,0,0,0,0,2Z" />
+          </svg>
+          <!-- moon icon -->
+          <svg class="swap-on fill-current w-5 h-5"
+               xmlns="http://www.w3.org/2000/svg"
+               viewBox="0 0 24 24">
+            <path d="M21.64,13a1,1,0,0,0-1.05-.14,8.05,8.05,0,0,1-3.37.73A8.15,8.15,0,0,1,9.08,5.49a8.59,8.59,0,0,1,.25-2A1,1,0,0,0,8,2.36,10.14,10.14,0,1,0,22,14.05,1,1,0,0,0,21.64,13Zm-9.5,6.69A8.14,8.14,0,0,1,7.08,5.22v.27A10.15,10.15,0,0,0,17.22,15.63a9.79,9.79,0,0,0,2.1-.22A8.11,8.11,0,0,1,12.14,19.73Z" />
+          </svg>
+        </label>
+        <ul class="menu menu-horizontal px-1">
+          {% if user.is_authenticated %}
+            <li>
+              <span class="font-semibold">{{ user.email }} ({{ user.organization.name }})</span>
+            </li>
+            <li>
+              <form action="{% url 'core:logout' %}" method="post" class="inline">
+                {% csrf_token %}
+                <button type="submit">Wyloguj</button>
+              </form>
+            </li>
+          {% else %}
+            <li>
+              <a href="{% url 'core:login' %}">Zaloguj</a>
+            </li>
+            <li>
+              <a href="{% url 'core:register' %}">Rejestracja</a>
+            </li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+    <!-- Messages -->
+    {% include "base.html#toast_messages" %}
+    <!-- Main Content -->
+    <main class="flex-grow container mx-auto p-4">
+      {% block content %}
+      {% endblock content %}
+    </main>
+    <!-- Footer -->
+    <footer class="footer footer-center p-4 bg-base-300 text-base-content">
+      <aside>
+        <p>Copyright © {% now "Y" %} - All right reserved by PAVER-OS</p>
+      </aside>
+    </footer>
+  </body>
+</html>

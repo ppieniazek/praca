@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}
+  Rejestracja - PAVER-OS
+{% endblock title %}
+{% block content %}
+  <div class="flex items-center justify-center min-h-[calc(100vh-200px)]">
+    <div id="auth-card" class="card w-full max-w-md bg-base-100 shadow-xl">
+      <div class="card-body">
+        <h2 class="card-title justify-center text-2xl font-bold mb-4">Zarejestruj firmę</h2>
+        <form method="post">
+          {% csrf_token %}
+          {% include "base.html#non_field_errors" %}
+
+          {% include "base.html#form_field" with field=form.company_name %}
+          {% include "base.html#form_field" with field=form.email wrapper_class="mt-4" %}
+          {% include "base.html#form_field" with field=form.password wrapper_class="mt-4" %}
+          {% include "base.html#form_field" with field=form.password_confirm wrapper_class="mt-4" %}
+
+          <div class="card-actions justify-end mt-6">
+            <button type="submit" class="btn btn-primary w-full">Zarejestruj</button>
+          </div>
+        </form>
+        <div class="divider">LUB</div>
+        <div class="text-center">
+          <p>
+            Masz już konto? <a href="{% url 'core:login' %}" class="link link-primary">Zaloguj się</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock content %}

@@ -4,16 +4,18 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.14"
-dependencies = [
-    "daphne>=4.2.1",
-    "datastar-py>=0.8.0",
-    "django>=6.0.2",
-]
+dependencies = ["daphne>=4.2.1", "datastar-py>=0.8.0", "django>=6.0.2"]
 
 [dependency-groups]
 dev = [
     "djade>=1.7.0",
     "pytest>=9.0.2",
+    "pytest-cov>=7.0.0",
     "pytest-django>=4.11.1",
     "ruff>=0.15.0",
 ]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings"
+python_files = ["test_*.py"]
+pythonpath = ["."]
