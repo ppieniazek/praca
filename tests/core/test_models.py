@@ -16,8 +16,12 @@ class TestUserModel:
     def test_create_user(self):
         org = Organization.objects.create(name="Test Corp")
         user = User.objects.create_user(
-            email="test@example.com", password="password123", organization=org
+            username="testuser",
+            email="test@example.com",
+            password="password123",
+            organization=org,
         )
+        assert user.username == "testuser"
         assert user.email == "test@example.com"
         assert user.check_password("password123")
         assert user.organization == org
@@ -25,18 +29,14 @@ class TestUserModel:
         assert not user.is_staff
         assert not user.is_superuser
         assert user.is_active
+        assert not user.must_change_password
 
-    def test_create_user_no_email(self):
+    def test_create_user_no_username(self):
         with pytest.raises(ValueError):
-            User.objects.create_user(email="", password="password123")
+            User.objects.create_user(username="", password="password123")
 
     def test_create_superuser(self):
-        # Superuser creation might not require org if we made it nullable/blank in code
-        # or if existing custom user manager handles it.
-        # Our model definition allows null=True for org (added in step 37).
-        user = User.objects.create_superuser(
-            email="admin@example.com", password="password123"
-        )
+        user = User.objects.create_superuser(username="admin", password="password123")
         assert user.is_staff
         assert user.is_superuser
         assert user.is_active
@@ -44,13 +44,13 @@ class TestUserModel:
     def test_user_roles(self):
         org = Organization.objects.create(name="Test Corp")
         owner = User.objects.create_user(
-            email="owner@example.com",
+            username="owner",
             password="pass",
             organization=org,
             role=User.Role.OWNER,
         )
         foreman = User.objects.create_user(
-            email="foreman@example.com",
+            username="foreman",
             password="pass",
             organization=org,
             role=User.Role.FOREMAN,

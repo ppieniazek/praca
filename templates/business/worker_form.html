@@ -1,0 +1,125 @@
+{% load i18n %}
+
+<div id="modal-content" class="modal-box max-w-lg bg-base-100 p-0 overflow-hidden border border-base-300 shadow-2xl max-h-[90vh] flex flex-col">
+    <div class="p-6 overflow-y-auto flex-grow">
+        <div class="flex justify-between items-start mb-6">
+            <h3 class="font-bold text-xl text-base-content">{{ title }}</h3>
+            <button type="button" class="btn btn-ghost btn-sm btn-circle" data-on:click="$is_modal_open = false">✕</button>
+        </div>
+
+        <form id="worker-form" data-on:submit__prevent="@post('{{ url }}?search=' + $search + '&show_inactive=' + $show_inactive, {contentType: 'form'})">
+            {% csrf_token %}
+            
+            {% include "partials.html#non_field_errors" %}
+
+            <div class="space-y-4">
+                <!-- SEKCJA 1: Dane osobowe -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {% include "partials.html#form_field" with field=form.first_name %}
+                    {% include "partials.html#form_field" with field=form.last_name %}
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {% include "partials.html#form_field" with field=form.hourly_rate %}
+                    {% include "partials.html#form_field" with field=form.phone %}
+                </div>
+                
+                <!-- SEKCJA 2: Status operacyjny -->
+                <div class="py-4 px-4 bg-base-200/20 rounded-xl border border-base-300/50 space-y-3">
+                    <div class="flex flex-col md:flex-row gap-4 items-end">
+                        <div class="form-control flex-grow w-full">
+                            <label class="label py-1" for="id_hired_at">
+                                <span class="label-text font-bold text-[11px] uppercase opacity-60 tracking-wider">{% trans "Data pierwszego zatrudnienia" %}</span>
+                            </label>
+                            <div class="flex gap-2">
+                                <input type="date" name="hired_at" id="id_hired_at" 
+                                       class="input input-bordered input-sm w-full focus:input-primary" 
+                                       value="{{ form.hired_at.value|default:'' }}" 
+                                       required>
+                                <button type="button" class="btn btn-primary btn-outline btn-sm" 
+                                        data-on:click="document.getElementById('id_hired_at').value = new Date().toISOString().split('T')[0]">
+                                    {% trans "Dziś" %}
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-control pb-1">
+                          <label class="label cursor-pointer justify-start gap-3">
+                            {{ form.is_active }}
+                            <span class="label-text font-bold text-sm">{% trans "Aktywny" %}</span>
+                          </label>
+                        </div>
+                    </div>
+                    <p class="text-[10px] opacity-40 italic leading-tight px-1">
+                        {% trans "Uwaga: Zmiana tej daty zresetuje historię okresów pracy pracownika." %}
+                    </p>
+                </div>
+
+                <!-- SEKCJA 3: Dane kontaktowe i notatki -->
+                <div class="space-y-4">
+                    {% include "partials.html#form_field" with field=form.address %}
+                    {% include "partials.html#form_field" with field=form.notes %}
+                </div>
+            </div>
+
+            {% if worker and not worker.user %}
+                <div class="divider opacity-10 my-6"></div>
+                <div class="bg-info/5 border border-info/10 p-4 rounded-xl flex justify-between items-center">
+                    <div>
+                        <div class="font-bold text-sm text-info">{% trans "Mianuj Brygadzistą" %}</div>
+                        <div class="text-[11px] opacity-70">{% trans "Pracownik otrzyma dostęp do logowania." %}</div>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-info" 
+                            data-on:click="@get('{% url 'business:worker_promote' pk=worker.id %}?search=' + $search + '&show_inactive=' + $show_inactive)">
+                        {% trans "Awansuj" %}
+                    </button>
+                </div>
+            {% elif worker and worker.user %}
+                <div class="divider opacity-10 my-6"></div>
+                <div class="bg-base-200/50 p-4 rounded-xl border border-base-300 space-y-4 text-base-content">
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <div class="bg-primary/10 text-primary rounded-lg p-2 shadow-sm border border-primary/20">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <div class="font-bold text-sm">{% trans "Aktywny Brygadzista" %}</div>
+                                <div class="text-[11px] opacity-60">{% trans "Login" %}: <span class="font-mono font-bold">{{ worker.user.username }}</span></div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-ghost btn-xs text-info hover:bg-info/10"
+                                data-on:click="@get('{% url 'business:worker_password_reset' pk=worker.id %}?search=' + $search + '&show_inactive=' + $show_inactive)">
+                            {% trans "Resetuj hasło" %}
+                        </button>
+                    </div>
+                    <div class="flex justify-end border-t border-base-300 pt-3">
+                        <button type="button" class="btn btn-ghost btn-xs text-error opacity-60 hover:opacity-100"
+                                data-on:click="if(confirm('{% trans "Usunąć konto użytkownika?" %}')) @post('{% url 'business:worker_demote' pk=worker.id %}?search=' + $search + '&show_inactive=' + $show_inactive, {contentType: 'form', headers: getCsrfParams().headers})">
+                            {% trans "Odbierz uprawnienia" %}
+                        </button>
+                    </div>
+                </div>
+            {% endif %}
+
+            <div class="modal-action mt-8 flex justify-between items-center border-t border-base-200 pt-4">
+                <div class="flex-1 flex justify-start">
+                    {% if worker %}
+                        <button type="button" class="btn btn-ghost btn-xs text-error/60 hover:text-error"
+                                data-on:click="if(confirm('{% trans "TRWAŁE USUNIĘCIE: Czy na pewno?" %}')) @post('{% url 'business:worker_delete' pk=worker.id %}?search=' + $search + '&show_inactive=' + $show_inactive, {contentType: 'form', headers: getCsrfParams().headers})">
+                            {% trans "Usuń" %}
+                        </button>
+                    {% endif %}
+                </div>
+                <div class="flex gap-2">
+                    <button type="button" class="btn btn-ghost btn-sm" data-on:click="$is_modal_open = false">
+                        {% trans "Anuluj" %}
+                    </button>
+                    <button type="submit" class="btn btn-primary btn-sm px-10 shadow-lg">
+                        {% trans "Zapisz" %}
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>

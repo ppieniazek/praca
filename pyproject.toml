@@ -10,6 +10,7 @@ dependencies = ["daphne>=4.2.1", "datastar-py>=0.8.0", "django>=6.0.2"]
 dev = [
     "djade>=1.7.0",
     "pytest>=9.0.2",
+    "pytest-asyncio>=1.3.0",
     "pytest-cov>=7.0.0",
     "pytest-django>=4.11.1",
     "ruff>=0.15.0",
@@ -19,3 +20,13 @@ dev = [
 DJANGO_SETTINGS_MODULE = "config.settings"
 python_files = ["test_*.py"]
 pythonpath = ["."]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+[tool.ruff]
+exclude = [
+    ".agent",
+    "docs",
+    "conductor",
+    ".venv",
+    "__pycache__",
+]

@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}
+  {% trans "Lista pracowników" %} - PAVER-OS
+{% endblock title %}
+
+{% block content %}
+  <div id="workers-dashboard">
+    <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+      <h1 class="text-2xl font-bold text-base-content">{% trans "Pracownicy" %}</h1>
+      
+      <div class="flex flex-wrap gap-2 w-full md:w-auto items-center">
+        <!-- Filtr nieaktywnych -->
+        <label class="label cursor-pointer gap-2 mr-2">
+          <span class="label-text text-xs opacity-70">{% trans "Pokaż niepracujących" %}</span>
+          <input type="checkbox" 
+                 class="toggle toggle-xs toggle-primary" 
+                 data-bind="show_inactive"
+                 data-on:change="@get('{% url 'business:worker_list' %}?search=' + $search + '&show_inactive=' + $show_inactive)"
+          />
+        </label>
+
+        <!-- Search -->
+        <input type="text" 
+               placeholder="{% trans 'Szukaj...' %}" 
+               class="input input-bordered input-sm w-full md:w-48"
+               data-bind="search"
+               data-on:input__debounce.500ms="@get('{% url 'business:worker_list' %}?search=' + $search + '&show_inactive=' + $show_inactive)"
+        />
+        
+        <button class="btn btn-primary btn-sm whitespace-nowrap px-6"
+                data-on:click="$is_modal_open = true; @get('{% url 'business:worker_create' %}?search=' + $search + '&show_inactive=' + $show_inactive)">
+          {% trans "Dodaj pracownika" %}
+        </button>
+      </div>
+    </div>
+
+    <div class="card bg-base-100 shadow-xl overflow-hidden border border-base-300">
+      <div class="card-body p-0">
+        <div class="overflow-x-auto">
+          <table class="table table-md table-zebra w-full">
+            <thead>
+              <tr class="bg-base-200/50 text-base-content/60 uppercase text-[10px] tracking-wider">
+                <th>{% trans "Imię i Nazwisko" %}</th>
+                <th>{% trans "Rola" %}</th>
+                <th>{% trans "Stawka" %}</th>
+                <th>{% trans "Telefon" %}</th>
+                <th>{% trans "Adres" %}</th>
+                <th>{% trans "Zatrudniony" %}</th>
+                <th class="text-right">{% trans "Akcje" %}</th>
+              </tr>
+            </thead>
+            <tbody id="worker-list-body">
+              {% partialdef worker_list_rows inline %}
+                {% for worker in workers %}
+                  <tr id="worker-row-{{ worker.id }}" class="{% if not worker.is_active %}opacity-40 grayscale{% endif %} hover group">
+                    <td class="text-base-content text-sm">{{ worker.first_name }} {{ worker.last_name }}</td>
+                    <td>
+                        {% if worker.user %}
+                            <span class="badge badge-sm badge-outline border-primary/50 text-primary font-semibold">{% trans "Brygadzista" %}</span>
+                        {% else %}
+                            <span class="badge badge-sm badge-outline opacity-40 font-medium">{% trans "Pracownik" %}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="text-base-content text-sm font-mono">{{ worker.hourly_rate }}</span>
+                        <span class="text-[10px] opacity-40 uppercase ml-1">PLN/h</span>
+                    </td>
+                    <td class="text-base-content/80 text-sm">{{ worker.phone|default:"-" }}</td>
+                    <td class="text-base-content/70 text-sm max-w-[200px] truncate" title="{{ worker.address }}">
+                        {{ worker.address|default:"-" }}
+                    </td>
+                    <td class="text-base-content/60 text-sm italic">{{ worker.hired_at|date:"d.m.Y" }}</td>
+                    <td class="text-right">
+                      <div class="flex justify-end gap-1">
+                        <button class="btn btn-ghost btn-xs text-info hover:bg-info/10"
+                                title="{% trans 'Historia' %}"
+                                data-on:click="$is_modal_open = true; @get('{% url 'business:worker_history' pk=worker.id %}')">
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        </button>
+                        <button class="btn btn-ghost btn-xs text-base-content/50 hover:text-base-content"
+                                data-on:click="$is_modal_open = true; @get('{% url 'business:worker_edit' pk=worker.id %}?search=' + $search + '&show_inactive=' + $show_inactive)">
+                          {% trans "Edytuj" %}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                {% empty %}
+                  <tr>
+                    <td colspan="7" class="text-center py-16 text-base-content/30 italic text-sm">
+                      {% trans "Brak pracowników w tej kategorii." %}
+                    </td>
+                  </tr>
+                {% endfor %}
+              {% endpartialdef %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Global Modal Container -->
+    <dialog id="global-modal" class="modal" data-class:modal-open="$is_modal_open">
+        <div id="modal-content" class="modal-box max-w-lg bg-base-100 p-0 overflow-hidden border border-base-300 shadow-2xl">
+            <!-- Dynamic Content -->
+        </div>
+        <form method="dialog" class="modal-backdrop">
+            <button type="button" data-on:click="$is_modal_open = false">close</button>
+        </form>
+    </dialog>
+  </div>
+{% endblock content %}

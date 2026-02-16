@@ -22,7 +22,8 @@ class User(AbstractBaseUser, PermissionsMixin):
         OWNER = "OWNER", "Właściciel"
         FOREMAN = "FOREMAN", "Brygadzista"
 
-    email = models.EmailField(_("Adres email"), unique=True)
+    username = models.CharField(_("Nazwa użytkownika"), max_length=150, unique=True)
+    email = models.EmailField(_("Adres email"), unique=True, null=True, blank=True)
     organization = models.ForeignKey(
         Organization,
         on_delete=models.CASCADE,
@@ -36,19 +37,20 @@ class User(AbstractBaseUser, PermissionsMixin):
     )
     is_active = models.BooleanField(_("Aktywny"), default=True)
     is_staff = models.BooleanField(_("Dostęp do zaplecza"), default=False)
+    must_change_password = models.BooleanField(_("Wymuś zmianę hasła"), default=False)
     created_at = models.DateTimeField(_("Data utworzenia"), auto_now_add=True)
 
     class Meta:
         verbose_name = _("Użytkownik")
         verbose_name_plural = _("Użytkownicy")
 
-    USERNAME_FIELD = "email"
+    USERNAME_FIELD = "username"
     REQUIRED_FIELDS = []
 
     objects = UserManager()
 
     def __str__(self):
-        return self.email
+        return self.username
 
     @property
     def is_owner(self) -> bool:

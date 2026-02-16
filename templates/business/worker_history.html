@@ -1,0 +1,43 @@
+{% load i18n %}
+
+<div id="modal-content" class="modal-box max-w-md bg-base-100 p-0 overflow-hidden border border-base-300 shadow-2xl max-h-[90vh] flex flex-col">
+    <div class="p-6 overflow-y-auto flex-grow">
+        <h3 class="font-bold text-lg mb-6 text-base-content">{% trans "Historia zatrudnienia" %}: {{ worker }}</h3>
+
+        <div class="space-y-4">
+            <ul class="timeline timeline-vertical timeline-compact">
+                {% for period in periods %}
+                    <li>
+                        {% if not forloop.first %}<hr class="bg-primary"/>{% endif %}
+                        <div class="timeline-middle">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 {% if not period.end_date %}text-primary{% else %}text-base-content/30{% endif %}">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-11.25a.75.75 0 00-1.5 0v2.5h-2.5a.75.75 0 000 1.5h3.25a.75.75 0 00.75-.75v-3.25z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div class="timeline-end timeline-box border-none bg-base-200/50 shadow-none text-sm py-2">
+                            <div class="font-bold">
+                                {{ period.start_date|date:"j E Y" }} — 
+                                {% if period.end_date %}
+                                    {{ period.end_date|date:"j E Y" }}
+                                {% else %}
+                                    <span class="text-primary font-bold">{% trans "Obecnie pracuje" %}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% if not forloop.last %}<hr class="bg-primary"/>{% endif %}
+                    </li>
+                {% empty %}
+                    <div class="text-center py-4 opacity-50 italic text-sm text-base-content/60">
+                        {% trans "Brak zarejestrowanej historii." %}
+                    </div>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="modal-action mt-8 pt-4 border-t border-base-200">
+            <button type="button" class="btn btn-sm btn-ghost" data-on:click="$is_modal_open = false">
+                {% trans "Zamknij" %}
+            </button>
+        </div>
+    </div>
+</div>

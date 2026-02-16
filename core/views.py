@@ -1,10 +1,10 @@
 from django.contrib import messages
-from django.contrib.auth import login, logout
+from django.contrib.auth import login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_http_methods
 
-from .forms import LoginForm, RegisterForm
+from .forms import LoginForm, PasswordChangeForm, RegisterForm
 
 
 @require_http_methods(["GET", "POST"])
@@ -18,7 +18,7 @@ def register_view(request):
             user = form.save()
             login(request, user)
             messages.success(
-                request, f"Witaj, {user.email}! Twoje konto zostało utworzone."
+                request, f"Witaj, {user.username}! Twoje konto zostało utworzone."
             )
             return redirect("core:dashboard")
     else:
@@ -37,7 +37,11 @@ def login_view(request):
         if form.is_valid():
             user = form.get_user()
             login(request, user)
-            messages.success(request, f"Witaj ponownie, {user.email}!")
+            messages.success(request, f"Witaj ponownie, {user.username}!")
+
+            if user.must_change_password:
+                return redirect("core:password_change")
+
             return redirect("core:dashboard")
     else:
         form = LoginForm()
@@ -54,4 +58,25 @@ def logout_view(request):
 
 @login_required
 def dashboard_view(request):
+    if request.user.must_change_password:
+        return redirect("core:password_change")
     return render(request, "core/dashboard.html")
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def password_change_view(request):
+    if request.method == "POST":
+        form = PasswordChangeForm(request.POST)
+        if form.is_valid():
+            user = request.user
+            user.set_password(form.cleaned_data["password"])
+            user.must_change_password = False
+            user.save()
+            update_session_auth_hash(request, user)
+            messages.success(request, "Twoje hasło zostało zmienione.")
+            return redirect("core:dashboard")
+    else:
+        form = PasswordChangeForm()
+
+    return render(request, "core/password_change.html", {"form": form})
