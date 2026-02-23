@@ -6,6 +6,8 @@ from core.models import Organization, User
 
 @pytest.mark.django_db
 class TestAuthViews:
+    """Testy widoków autentykacji i rejestracji."""
+
     def test_register_creates_user_and_org(self, client):
         url = reverse("core:register")
         data = {
@@ -25,8 +27,6 @@ class TestAuthViews:
         user = User.objects.get(username="newuser")
         assert user.organization.name == "New Corp"
         assert user.is_owner
-
-        # Verify auto-login
         assert int(client.session["_auth_user_id"]) == user.id
 
     def test_login_valid(self, client):

@@ -18,6 +18,8 @@ class Organization(models.Model):
 
 
 class User(AbstractBaseUser, PermissionsMixin):
+    """Główny model użytkownika oparty na powiązaniu z organizacją."""
+
     class Role(models.TextChoices):
         OWNER = "OWNER", "Właściciel"
         FOREMAN = "FOREMAN", "Brygadzista"
@@ -29,7 +31,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         on_delete=models.CASCADE,
         related_name="members",
         verbose_name=_("Organizacja"),
-        null=True,  # Allows createsuperuser to work, but enforce in forms.
+        null=True,
         blank=True,
     )
     role = models.CharField(
@@ -38,6 +40,12 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(_("Aktywny"), default=True)
     is_staff = models.BooleanField(_("Dostęp do zaplecza"), default=False)
     must_change_password = models.BooleanField(_("Wymuś zmianę hasła"), default=False)
+    visible_workers = models.ManyToManyField(
+        "business.Worker",
+        related_name="visible_to",
+        blank=True,
+        verbose_name=_("Widoczni pracownicy"),
+    )
     created_at = models.DateTimeField(_("Data utworzenia"), auto_now_add=True)
 
     class Meta:

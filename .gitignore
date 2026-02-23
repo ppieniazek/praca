@@ -11,3 +11,7 @@ wheels/
 
 # Database
 db.sqlite3
+
+# Testing
+.coverage
+.pytest_cache/

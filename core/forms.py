@@ -34,9 +34,7 @@ class RegisterForm(forms.Form):
         return cleaned_data
 
     def save(self):
-        """
-        Create Organization and Owner User.
-        """
+        """Tworzy nową organizację oraz użytkownika o roli OWNER."""
         company_name = self.cleaned_data["company_name"]
         username = self.cleaned_data["username"]
         email = self.cleaned_data.get("email")

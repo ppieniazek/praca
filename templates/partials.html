@@ -1,49 +1,42 @@
 {% load i18n %}
-
 {% partialdef non_field_errors %}
-  {% if form.non_field_errors %}
-    <div class="alert alert-error mb-4" role="alert">
-      {% for error in form.non_field_errors %}<span>{{ error }}</span>{% endfor %}
-    </div>
-  {% endif %}
-{% endpartialdef %}
-
-{% partialdef form_field %}
-  <div class="form-control w-full {{ wrapper_class }}">
-    <label class="label" for="id_{{ field.name }}">
-      <span class="label-text">{{ field.label }}</span>
-    </label>
-    <input type="{{ field.field.widget.input_type|default:'text' }}"
-           name="{{ field.name }}"
-           id="id_{{ field.name }}"
-           class="input input-bordered w-full {% if field.errors %}input-error{% endif %} {{ input_class }}"
-           value="{{ field.value|default:'' }}"
-           {% if field.field.required %}required{% endif %} 
-           {% for k, v in field.field.widget.attrs.items %}
-             {{ k }}="{{ v }}"
-           {% endfor %}
-           />
-    {% if field.errors %}
-      <label class="label" for="id_{{ field.name }}">
-        <span class="label-text-alt text-error">{{ field.errors.0 }}</span>
-      </label>
-    {% endif %}
+{% if form.non_field_errors %}
+  <div class="alert alert-error mb-4" role="alert">
+    {% for error in form.non_field_errors %}<span>{{ error }}</span>{% endfor %}
   </div>
+{% endif %}
 {% endpartialdef %}
-
-{% partialdef toast_messages %}
-  {% if messages %}
-    <div id="toast-container" class="toast toast-top toast-center z-50">
-      {% for message in messages %}
-        <!-- animate-fade-out: waits 4s, then fades out over 0.5s. Removed on end. -->
-        <!-- FIX: Changed $el.remove() to el.remove() for Datastar v1 compliance -->
-        <div class="alert {% if message.tags %}alert-{{ message.tags }}{% else %}alert-info{% endif %} shadow-lg animate-fade-out"
-             data-on:animationend="el.remove()">
-          <span>{{ message }}</span>
-        </div>
-      {% endfor %}
-    </div>
-  {% else %}
-    <div id="toast-container"></div>
+{% partialdef form_field %}
+<div class="form-control w-full {{ wrapper_class }}">
+  <label class="label" for="id_{{ field.name }}">
+    <span class="label-text">{{ field.label }}</span>
+  </label>
+  <input type="{{ field.field.widget.input_type|default:'text' }}"
+         name="{{ field.name }}"
+         id="id_{{ field.name }}"
+         class="input input-bordered w-full {% if field.errors %}input-error{% endif %} {{ input_class }}"
+         value="{{ field.value|default:'' }}"
+         {% if field.field.required %}required{% endif %}
+         {% for k, v in field.field.widget.attrs.items %}{{ k }}="{{ v }}"{% endfor %} />
+  {% if field.errors %}
+    <label class="label" for="id_{{ field.name }}">
+      <span class="label-text-alt text-error">{{ field.errors.0 }}</span>
+    </label>
   {% endif %}
+</div>
+{% endpartialdef %}
+{% partialdef toast_messages %}
+{% if messages %}
+  <div id="toast-container"
+       class="toast toast-top toast-center mt-16 z-50 pointer-events-none">
+    {% for message in messages %}
+      <div class="alert {% if message.tags %}alert-{{ message.tags }}{% else %}alert-info{% endif %} shadow-lg animate-fade-out pointer-events-auto"
+           data-on:animationend="el.remove()">
+        <span>{{ message }}</span>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div id="toast-container"></div>
+{% endif %}
 {% endpartialdef %}

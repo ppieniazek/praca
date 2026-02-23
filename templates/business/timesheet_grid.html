@@ -1,0 +1,251 @@
+{% extends "base.html" %}
+{% load i18n l10n %}
+{% block title %}
+    {% trans "Ewidencja Czasu Pracy" %} - PAVER-OS
+{% endblock title %}
+{% block content %}
+    {% partialdef timesheet_full_component inline %}
+    <div id="timesheet-container"
+         class="flex flex-col gap-4"
+         data-replace-url="`?month={{ current_month }}&year={{ current_year }}`"
+         data-signals='{{ worker_visible_signals_json|safe|default:"{}" }}'>
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <h1 class="text-2xl font-bold">{% trans "Ewidencja Czasu Pracy" %}</h1>
+            <div class="flex flex-wrap items-center gap-4">
+                <button class="btn btn-outline btn-sm btn-accent w-full md:w-auto"
+                        data-on:click="@get('{% url 'business:timesheet_manage_workers' %}?month={{ current_month }}&year={{ current_year }}', {filterSignals: {include: '^workerVisible_'}})">
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                         fill="none"
+                         viewBox="0 0 24 24"
+                         stroke-width="1.5"
+                         stroke="currentColor"
+                         class="w-4 h-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
+                    </svg>
+                    {% trans "Pracownicy" %}
+                    <div class="badge badge-secondary badge-sm">{{ workers|length }}</div>
+                </button>
+                <div class="flex items-center gap-2 bg-base-100 p-1 rounded-lg shadow-sm border border-base-300">
+                    <button class="btn btn-ghost btn-sm"
+                            data-on:click="@get('{% url 'business:timesheet_grid_partial' %}', {filterSignals: {include: '^workerVisible_'}})">
+                        {% trans "Dzisiaj" %}
+                    </button>
+                    <div class="join">
+                        <button class="btn btn-ghost btn-sm btn-square join-item"
+                                data-on:click="@get('{% url 'business:timesheet_grid_partial' %}?month={{ current_month|add:'-1' }}&year={{ current_year }}', {filterSignals: {include: '^workerVisible_'}})">
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                 fill="none"
+                                 viewBox="0 0 24 24"
+                                 stroke-width="1.5"
+                                 stroke="currentColor"
+                                 class="w-4 h-4">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                            </svg>
+                        </button>
+                        <span class="btn btn-ghost btn-sm no-animation join-item pointer-events-none min-w-[140px] capitalize">
+                            {{ month_display }}
+                        </span>
+                        <button class="btn btn-ghost btn-sm btn-square join-item"
+                                data-on:click="@get('{% url 'business:timesheet_grid_partial' %}?month={{ current_month|add:'1' }}&year={{ current_year }}', {filterSignals: {include: '^workerVisible_'}})">
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                 fill="none"
+                                 viewBox="0 0 24 24"
+                                 stroke-width="1.5"
+                                 stroke="currentColor"
+                                 class="w-4 h-4">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card bg-base-100 shadow-xl border border-base-300">
+            <div class="overflow-x-auto max-h-[calc(100vh-250px)]">
+                <table class="table table-xs table-pin-rows">
+                    <thead>
+                        <tr class="bg-base-100 text-base-content/70 text-xs">
+                            <th class="sticky left-0 z-30 bg-base-100/90 backdrop-blur border-b border-r border-base-300 w-32 min-w-[8rem] shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)] p-2 font-semibold tracking-wider uppercase">
+                                {% trans "Pracownik" %}
+                            </th>
+                            {% for day in days %}
+                                <th class="text-center border-b border-r border-base-300 min-w-[24px] max-w-[32px] p-0 font-normal {% if day not in future_days %}hover:bg-base-200 cursor-pointer{% else %}bg-base-200/50 cursor-not-allowed{% endif %} transition-colors group bg-base-100/90 backdrop-blur"
+                                    data-signals="{'editMode_{{ day }}': false, 'bulkInput_{{ day }}': ''}">
+                                    <div data-show="!$editMode_{{ day }}" class="flex flex-col items-center justify-center py-1 h-full relative" {% if day not in future_days %} title="{% trans 'Wypełnij zbiorczo dla tego dnia' %}" data-on:click="$editMode_{{ day }} = true; setTimeout(() => document.getElementById('bulk-input-{{ day }}').focus(), 50)"
+                                    {% else %}
+                                        title="{% trans 'Data przyszła' %}"
+                                    {% endif %}
+                                    >
+                                    <span class="text-[10px] font-semibold tabular-nums opacity-60 {% if day not in future_days %}group-hover:text-primary group-hover:opacity-100{% endif %} transition-colors">{{ day }}</span>
+                                </div>
+                                <div data-show="$editMode_{{ day }}" class="h-full w-full relative">
+                                    <input type="text"
+                                           id="bulk-input-{{ day }}"
+                                           inputmode="numeric"
+                                           pattern="[0-9]*"
+                                           maxlength="2"
+                                           data-bind="bulkInput_{{ day }}"
+                                           class="w-full h-full bg-base-100 text-center font-bold text-[11px] text-primary outline-none focus:shadow-[inset_0_0_0_1px_theme(colors.primary)] rounded-none cursor-text [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                           {% if day in future_days %}disabled{% endif %}
+                                           data-on:keydown="if(evt.key === 'Enter') { evt.preventDefault(); if($bulkInput_{{ day }} !== '') { @post('{% url 'business:timesheet_bulk_fill' %}?date={{ current_year }}-{{ current_month|stringformat:'02d' }}-{{ day|stringformat:'02d' }}', {headers: getCsrfParams().headers, filterSignals: {include: '^workerVisible_|^bulkInput_{{ day }}$'}}); $editMode_{{ day }} = false; $bulkInput_{{ day }} = ''; } else { $editMode_{{ day }} = false; } }"
+                                           data-on:blur="if($bulkInput_{{ day }} !== '') { @post('{% url 'business:timesheet_bulk_fill' %}?date={{ current_year }}-{{ current_month|stringformat:'02d' }}-{{ day|stringformat:'02d' }}', {headers: getCsrfParams().headers, filterSignals: {include: '^workerVisible_|^bulkInput_{{ day }}$'}}); $editMode_{{ day }} = false; $bulkInput_{{ day }} = '' } else { $editMode_{{ day }} = false }">
+                                </div>
+                            </th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                {% partialdef timesheet_body inline %}
+                <tbody id="timesheet-body">
+                    {% for worker in workers %}
+                        <tr class="group/row hover:bg-base-200/50 transition-colors">
+                            <th class="sticky left-0 z-20 bg-base-100/95 backdrop-blur font-medium whitespace-nowrap border-b border-r border-base-300 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)] w-32 min-w-[8rem] overflow-hidden text-ellipsis group-hover/row:bg-base-200/50 transition-colors p-2">
+                                <div class="flex flex-col truncate pr-5 relative">
+                                    <span class="truncate text-[11px] font-bold opacity-90">{{ worker.last_name }}</span>
+                                    <span class="text-[9px] opacity-60 truncate">{{ worker.first_name }}</span>
+                                    {% if request.user.is_owner %}
+                                        <button class="absolute right-0 top-1/2 -translate-y-1/2 p-1 flex items-center justify-center opacity-0 group-hover/row:opacity-100 transition-opacity rounded hover:bg-base-200 text-base-content/50 hover:text-primary"
+                                                title="Historia edycji"
+                                                data-on:click="@get('{% url 'business:timesheet_history' worker.pk %}', {filterSignals: {include: '^is_modal_open$'}})">
+                                            <svg class="w-3.5 h-3.5"
+                                                 fill="none"
+                                                 stroke="currentColor"
+                                                 viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z">
+                                                </path>
+                                            </svg>
+                                        </button>
+                                    {% endif %}
+                                </div>
+                            </th>
+                            {% for day_data in worker.days_data %}
+                                <td class="text-center border-b border-r border-base-300 p-0 h-10 min-w-[24px] max-w-[32px] bg-transparent transition-colors relative">
+                                    {% with day=day_data.day log=day_data.log worker=worker current_year=current_year current_month=current_month future_days=future_days %}
+                                        {% partialdef timesheet_cell inline %}
+                                        <div id="cell-{{ worker.id }}-{{ day }}" class="w-full h-full">
+                                            {% localize off %}
+                                            <input type="text"
+                                                   inputmode="numeric"
+                                                   pattern="[0-9]*"
+                                                   maxlength="2"
+                                                   data-bind="log_{{ current_year }}_{{ current_month }}_{{ worker.id }}_{{ day }}"
+                                                   value="{% if log and log.hours %}{{ log.hours|floatformat:0 }}{% endif %}"
+                                                   autocomplete="off"
+                                                   class="w-full h-full bg-transparent text-center font-medium text-[11px] outline-none transition-all {% if day not in future_days %}hover:bg-base-200 focus:bg-base-100 focus:shadow-[inset_0_0_0_1px_theme(colors.primary)] cursor-text{% else %}bg-base-200/50 cursor-not-allowed{% endif %} focus:z-20 relative z-0 rounded-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none {% if log %}font-bold text-primary{% else %}text-base-content/20 hover:text-base-content/60{% endif %} {% if log and log.created_by != request.user and not request.user.is_owner %}bg-warning/10 text-warning{% endif %}"
+                                                   {% if day in future_days %}disabled{% endif %}
+                                                   {% if log and log.created_by != request.user %}title="Oryginalnie wpisane przez: {{ log.created_by.username }}"{% endif %}
+                                                   data-on:change="@post('{% url 'business:timesheet_update' %}?key=log_{{ current_year }}_{{ current_month }}_{{ worker.id }}_{{ day }}&year={{ current_year }}&month={{ current_month }}', {headers: getCsrfParams().headers, filterSignals: {include: '^log_{{ current_year }}_{{ current_month }}_{{ worker.id }}_{{ day }}$'}})">
+                                        {% endlocalize %}
+                                    </div>
+                                {% endpartialdef %}
+                            {% endwith %}
+                        </td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </tbody>
+    {% endpartialdef %}
+</table>
+</div>
+</div>
+</div>
+{% endpartialdef %}
+{% partialdef timesheet_manage_workers %}
+<div id="modal-content"
+     class="modal-box max-w-lg bg-base-100 p-0 overflow-hidden border border-base-300 shadow-2xl max-h-[90vh] flex flex-col">
+    <div class="p-6 overflow-y-auto flex-grow">
+        <div class="flex justify-between items-start mb-6">
+            <h3 class="font-bold text-xl text-base-content">{% trans "Zarządzaj widocznymi pracownikami" %}</h3>
+            <button type="button"
+                    class="btn btn-ghost btn-sm btn-circle"
+                    data-on:click="$is_modal_open = false">✕</button>
+        </div>
+        <div class="mb-4 max-h-80 overflow-y-auto">
+            {% for worker in all_workers %}
+                <label class="flex items-center p-3 sm:p-2 hover:bg-base-200 rounded-lg cursor-pointer transition-colors mb-2 border border-base-200 sm:border-transparent">
+                    <input type="checkbox"
+                           data-bind="workerVisible_{{ worker.id }}"
+                           class="checkbox checkbox-primary checkbox-md mr-4">
+                    <span class="flex-grow">
+                        {{ worker.last_name }} {{ worker.first_name }}
+                        {% if worker.id == user_worker_id %}
+                            ({% trans "Ty" %})
+                        {% endif %}
+                    </span>
+                </label>
+            {% endfor %}
+        </div>
+        <div class="modal-action justify-between border-t border-base-200 pt-4">
+            <button type="button"
+                    class="btn btn-ghost"
+                    data-on:click="$is_modal_open = false">{% trans "Anuluj" %}</button>
+            <button type="button"
+                    class="btn btn-primary"
+                    data-on:click="$is_modal_open = false; @get('{% url 'business:timesheet_grid_partial' %}?month={{ current_month }}&year={{ current_year }}', {filterSignals: {include: '^workerVisible_'}})">
+                {% trans "Zapisz" %}
+            </button>
+        </div>
+    </div>
+</div>
+{% endpartialdef %}
+{% partialdef timesheet_history_modal %}
+<div id="modal-content"
+     class="modal-box bg-base-100 max-w-lg p-0 overflow-hidden border border-base-300 shadow-2xl flex flex-col max-h-[90vh]">
+    <div class="p-6 overflow-y-auto flex-grow">
+        <div class="flex justify-between items-start mb-6">
+            <h3 class="font-bold text-xl text-base-content">Historia zmian: {{ worker.first_name }} {{ worker.last_name }}</h3>
+            <button type="button"
+                    class="btn btn-ghost btn-sm btn-circle"
+                    data-on:click="$is_modal_open = false">✕</button>
+        </div>
+        <div class="space-y-4">
+            {% if histories %}
+                <ul class="timeline timeline-vertical timeline-compact">
+                    {% for item in histories %}
+                        <li>
+                            <div class="timeline-middle">
+                                <svg xmlns="http://www.w3.org/2000/svg"
+                                     viewBox="0 0 20 20"
+                                     fill="currentColor"
+                                     class="w-4 h-4 text-primary">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-13a.75.75 0 00-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 000-1.5h-3.25V5z" clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                            <div class="timeline-end timeline-box bg-base-200/50 border-none w-full ml-4 mb-4 shadow-sm">
+                                <div class="flex justify-between items-start mb-1">
+                                    <div class="font-bold text-sm">{{ item.date|date:"Y-m-d" }}</div>
+                                    <div class="text-xs opacity-60">{{ item.created_at|date:"Y-m-d H:i" }}</div>
+                                </div>
+                                <div class="text-sm">
+                                    {% trans "Zmiana:" %}
+                                    <span class="font-mono bg-base-300 px-1 rounded">{{ item.old_hours|default:"0" }}h</span>
+                                    →
+                                    <span class="font-mono bg-primary text-primary-content px-1 rounded">{{ item.new_hours|default:"0" }}h</span>
+                                </div>
+                                <div class="text-xs mt-2 opacity-75">{% trans "Przez:" %} {{ item.changed_by.username|default:"Nieznany" }}</div>
+                            </div>
+                            {% if not forloop.last %}<hr class="bg-base-200" />{% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <div class="alert alert-info shadow-none bg-base-200 text-base-content/70 flex flex-col items-center justify-center p-8 border border-base-300">
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                         fill="none"
+                         viewBox="0 0 24 24"
+                         class="w-12 h-12 stroke-current mb-4 opacity-50">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z">
+                        </path>
+                    </svg>
+                    <span>{% trans "Brak historii zmian dla tego pracownika." %}</span>
+                </div>
+            {% endif %}
+        </div>
+        <div class="modal-action mt-6 border-t border-base-200 pt-4">
+            <button type="button"
+                    class="btn btn-ghost w-full"
+                    data-on:click="$is_modal_open = false">{% trans "Zamknij" %}</button>
+        </div>
+    </div>
+</div>
+{% endpartialdef %}
+{% endblock content %}

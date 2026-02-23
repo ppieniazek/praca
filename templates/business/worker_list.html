@@ -1,115 +1,344 @@
 {% extends "base.html" %}
 {% load i18n %}
-
 {% block title %}
   {% trans "Lista pracowników" %} - PAVER-OS
 {% endblock title %}
-
 {% block content %}
   <div id="workers-dashboard">
     <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
       <h1 class="text-2xl font-bold text-base-content">{% trans "Pracownicy" %}</h1>
-      
       <div class="flex flex-wrap gap-2 w-full md:w-auto items-center">
-        <!-- Filtr nieaktywnych -->
         <label class="label cursor-pointer gap-2 mr-2">
           <span class="label-text text-xs opacity-70">{% trans "Pokaż niepracujących" %}</span>
-          <input type="checkbox" 
-                 class="toggle toggle-xs toggle-primary" 
+          <input type="checkbox"
+                 class="toggle toggle-xs toggle-primary"
                  data-bind="show_inactive"
-                 data-on:change="@get('{% url 'business:worker_list' %}?search=' + $search + '&show_inactive=' + $show_inactive)"
-          />
+                 data-on:change="@get('{% url 'business:worker_list' %}?search=' + $search + '&show_inactive=' + $show_inactive)" />
         </label>
-
-        <!-- Search -->
-        <input type="text" 
-               placeholder="{% trans 'Szukaj...' %}" 
+        <input type="text"
+               placeholder="{% trans 'Szukaj...' %}"
                class="input input-bordered input-sm w-full md:w-48"
                data-bind="search"
-               data-on:input__debounce.500ms="@get('{% url 'business:worker_list' %}?search=' + $search + '&show_inactive=' + $show_inactive)"
-        />
-        
+               data-on:input__debounce.500ms="@get('{% url 'business:worker_list' %}?search=' + $search + '&show_inactive=' + $show_inactive)" />
         <button class="btn btn-primary btn-sm whitespace-nowrap px-6"
-                data-on:click="$is_modal_open = true; @get('{% url 'business:worker_create' %}?search=' + $search + '&show_inactive=' + $show_inactive)">
+                data-on:click="@get('{% url 'business:worker_create' %}?search=' + $search + '&show_inactive=' + $show_inactive)">
           {% trans "Dodaj pracownika" %}
         </button>
       </div>
     </div>
-
     <div class="card bg-base-100 shadow-xl overflow-hidden border border-base-300">
       <div class="card-body p-0">
         <div class="overflow-x-auto">
           <table class="table table-md table-zebra w-full">
-            <thead>
+            <thead class="hidden md:table-header-group">
               <tr class="bg-base-200/50 text-base-content/60 uppercase text-[10px] tracking-wider">
                 <th>{% trans "Imię i Nazwisko" %}</th>
                 <th>{% trans "Rola" %}</th>
-                <th>{% trans "Stawka" %}</th>
+                <th>{% trans "Wynagrodzenie" %}</th>
                 <th>{% trans "Telefon" %}</th>
                 <th>{% trans "Adres" %}</th>
-                <th>{% trans "Zatrudniony" %}</th>
+                <th class="hidden sm:table-cell">{% trans "Zatrudniony" %}</th>
                 <th class="text-right">{% trans "Akcje" %}</th>
               </tr>
             </thead>
             <tbody id="worker-list-body">
               {% partialdef worker_list_rows inline %}
-                {% for worker in workers %}
-                  <tr id="worker-row-{{ worker.id }}" class="{% if not worker.is_active %}opacity-40 grayscale{% endif %} hover group">
-                    <td class="text-base-content text-sm">{{ worker.first_name }} {{ worker.last_name }}</td>
-                    <td>
-                        {% if worker.user %}
-                            <span class="badge badge-sm badge-outline border-primary/50 text-primary font-semibold">{% trans "Brygadzista" %}</span>
-                        {% else %}
-                            <span class="badge badge-sm badge-outline opacity-40 font-medium">{% trans "Pracownik" %}</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        <span class="text-base-content text-sm font-mono">{{ worker.hourly_rate }}</span>
-                        <span class="text-[10px] opacity-40 uppercase ml-1">PLN/h</span>
-                    </td>
-                    <td class="text-base-content/80 text-sm">{{ worker.phone|default:"-" }}</td>
-                    <td class="text-base-content/70 text-sm max-w-[200px] truncate" title="{{ worker.address }}">
-                        {{ worker.address|default:"-" }}
-                    </td>
-                    <td class="text-base-content/60 text-sm italic">{{ worker.hired_at|date:"d.m.Y" }}</td>
-                    <td class="text-right">
-                      <div class="flex justify-end gap-1">
-                        <button class="btn btn-ghost btn-xs text-info hover:bg-info/10"
-                                title="{% trans 'Historia' %}"
-                                data-on:click="$is_modal_open = true; @get('{% url 'business:worker_history' pk=worker.id %}')">
-                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                        </button>
-                        <button class="btn btn-ghost btn-xs text-base-content/50 hover:text-base-content"
-                                data-on:click="$is_modal_open = true; @get('{% url 'business:worker_edit' pk=worker.id %}?search=' + $search + '&show_inactive=' + $show_inactive)">
-                          {% trans "Edytuj" %}
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                {% empty %}
-                  <tr>
-                    <td colspan="7" class="text-center py-16 text-base-content/30 italic text-sm">
-                      {% trans "Brak pracowników w tej kategorii." %}
-                    </td>
-                  </tr>
-                {% endfor %}
-              {% endpartialdef %}
-            </tbody>
-          </table>
-        </div>
+              {% for worker in workers %}
+                <tr id="worker-row-{{ worker.id }}"
+                    class="{% if not worker.is_active %}opacity-40 grayscale{% endif %} hover group flex flex-col md:table-row bg-base-100 border-b border-base-200 mb-4 md:mb-0 rounded-box md:rounded-none shadow-sm md:shadow-none overflow-hidden">
+                  <td class="text-base-content font-bold md:font-normal text-base md:text-sm bg-base-200/30 md:bg-transparent flex justify-between items-center md:table-cell w-full">
+                    <span>{{ worker.first_name }} {{ worker.last_name }}</span>
+                    <span class="md:hidden">
+                      {% if worker.user %}
+                        <span class="badge badge-sm badge-outline border-primary/50 text-primary font-semibold">{% trans "Brygadzista" %}</span>
+                      {% else %}
+                        <span class="badge badge-sm badge-outline opacity-40 font-medium">{% trans "Pracownik" %}</span>
+                      {% endif %}
+                    </span>
+                  </td>
+                  <td class="hidden md:table-cell">
+                    {% if worker.user %}
+                      <span class="badge badge-sm badge-outline border-primary/50 text-primary font-semibold">{% trans "Brygadzista" %}</span>
+                    {% else %}
+                      <span class="badge badge-sm badge-outline opacity-40 font-medium">{% trans "Pracownik" %}</span>
+                    {% endif %}
+                  </td>
+                  <td class="flex justify-between md:table-cell border-b border-base-100/50 md:border-none p-3 md:p-2">
+                    <span class="text-xs font-semibold opacity-50 uppercase md:hidden block">{% trans "Wynagrodzenie" %}</span>
+                    <div>
+                      <span class="text-base-content text-sm font-mono font-medium">{{ worker.hourly_rate }}</span>
+                      <span class="text-[10px] opacity-40 uppercase ml-1">PLN/h</span>
+                    </div>
+                  </td>
+                  <td class="flex justify-between md:table-cell border-b border-base-100/50 md:border-none p-3 md:p-2">
+                    <span class="text-xs font-semibold opacity-50 uppercase md:hidden block">{% trans "Telefon" %}</span>
+                    <span class="text-base-content/80 text-sm">{{ worker.phone|default:"-" }}</span>
+                  </td>
+                  <td class="flex justify-between md:table-cell border-b border-base-100/50 md:border-none p-3 md:p-2">
+                    <span class="text-xs font-semibold opacity-50 uppercase md:hidden block">{% trans "Adres" %}</span>
+                    <span class="text-base-content/70 text-sm max-w-[200px] truncate block text-right md:text-left"
+                          title="{{ worker.address }}">{{ worker.address|default:"-" }}</span>
+                  </td>
+                  <td class="hidden sm:flex justify-between md:table-cell border-b border-base-100/50 md:border-none p-3 md:p-2">
+                    <span class="text-xs font-semibold opacity-50 uppercase md:hidden block">{% trans "Zatrudniony" %}</span>
+                    <span class="text-base-content/60 text-sm italic">{{ worker.hired_at|date:"d.m.Y" }}</span>
+                  </td>
+                  <td class="text-right p-3 md:p-2 bg-base-50 md:bg-transparent">
+                    <div class="flex justify-end gap-2 md:gap-1">
+                      <button class="btn btn-ghost btn-sm md:btn-xs text-info hover:bg-info/10"
+                              title="{% trans 'Historia' %}"
+                              data-on:click="@get('{% url 'business:worker_history' pk=worker.id %}')">
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                             fill="none"
+                             viewBox="0 0 24 24"
+                             stroke-width="1.5"
+                             stroke="currentColor"
+                             class="w-5 h-5 md:w-4 md:h-4">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span class="md:hidden ml-1 text-xs">{% trans "Historia" %}</span>
+                      </button>
+                      <button class="btn btn-ghost btn-sm md:btn-xs text-base-content border border-base-300 md:border-transparent hover:border-base-content shadow-sm md:shadow-none"
+                              data-on:click="@get('{% url 'business:worker_edit' pk=worker.id %}?search=' + $search + '&show_inactive=' + $show_inactive)">
+                        {% trans "Edytuj" %}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="7"
+                      class="text-center py-16 text-base-content/30 italic text-sm">
+                    {% trans "Brak pracowników w tej kategorii." %}
+                  </td>
+                </tr>
+              {% endfor %}
+            {% endpartialdef %}
+          </tbody>
+        </table>
       </div>
     </div>
-
-    <!-- Global Modal Container -->
-    <dialog id="global-modal" class="modal" data-class:modal-open="$is_modal_open">
-        <div id="modal-content" class="modal-box max-w-lg bg-base-100 p-0 overflow-hidden border border-base-300 shadow-2xl">
-            <!-- Dynamic Content -->
-        </div>
-        <form method="dialog" class="modal-backdrop">
-            <button type="button" data-on:click="$is_modal_open = false">close</button>
-        </form>
-    </dialog>
   </div>
+</div>
+{% partialdef worker_form %}
+<div id="modal-content"
+     class="modal-box max-w-lg bg-base-100 p-0 overflow-hidden border border-base-300 shadow-2xl max-h-[90vh] flex flex-col">
+  <div class="p-6 overflow-y-auto flex-grow">
+    <div class="flex justify-between items-start mb-6">
+      <h3 class="font-bold text-xl text-base-content">{{ title }}</h3>
+      <button type="button"
+              class="btn btn-ghost btn-sm btn-circle"
+              data-on:click="$is_modal_open = false">✕</button>
+    </div>
+    <form id="worker-form"
+          data-on:submit__prevent="@post('{{ url }}?search=' + $search + '&show_inactive=' + $show_inactive, {contentType: 'form'})">
+      {% csrf_token %}
+      {% include "partials.html#non_field_errors" %}
+      <div class="space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {% include "partials.html#form_field" with field=form.first_name %}
+          {% include "partials.html#form_field" with field=form.last_name %}
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {% include "partials.html#form_field" with field=form.hourly_rate %}
+          {% include "partials.html#form_field" with field=form.phone %}
+        </div>
+        <div class="py-4 px-4 bg-base-200/20 rounded-xl border border-base-300/50 space-y-3">
+          <div class="flex flex-col md:flex-row gap-4 items-end">
+            <div class="form-control flex-grow w-full">
+              <label class="label py-1" for="id_hired_at">
+                <span class="label-text font-bold text-[11px] uppercase opacity-60 tracking-wider">{% trans "Data pierwszego zatrudnienia" %}</span>
+              </label>
+              <div class="flex gap-2">
+                <input type="date"
+                       name="hired_at"
+                       id="id_hired_at"
+                       class="input input-bordered input-sm w-full focus:input-primary"
+                       value="{{ form.hired_at.value|default:'' }}"
+                       required>
+                <button type="button"
+                        class="btn btn-primary btn-outline btn-sm"
+                        data-on:click="document.getElementById('id_hired_at').value = new Date().toISOString().split('T')[0]">
+                  {% trans "Dziś" %}
+                </button>
+              </div>
+            </div>
+            <div class="form-control pb-1">
+              <label class="label cursor-pointer justify-start gap-3">
+                {{ form.is_active }}
+                <span class="label-text font-bold text-sm">{% trans "Aktywny" %}</span>
+              </label>
+            </div>
+          </div>
+          <p class="text-[10px] opacity-40 italic leading-tight px-1">
+            {% trans "Uwaga: Zmiana tej daty zresetuje historię okresów pracy pracownika." %}
+          </p>
+        </div>
+        <div class="space-y-4">
+          {% include "partials.html#form_field" with field=form.address %}
+          {% include "partials.html#form_field" with field=form.notes %}
+        </div>
+      </div>
+      {% if worker and not worker.user %}
+        <div class="divider opacity-10 my-6"></div>
+        <div class="bg-info/5 border border-info/10 p-4 rounded-xl flex justify-between items-center">
+          <div>
+            <div class="font-bold text-sm text-info">{% trans "Mianuj Brygadzistą" %}</div>
+            <div class="text-[11px] opacity-70">{% trans "Pracownik otrzyma dostęp do logowania." %}</div>
+          </div>
+          <button type="button"
+                  class="btn btn-sm btn-info"
+                  data-on:click="@get('{% url 'business:worker_promote' pk=worker.id %}?search=' + $search + '&show_inactive=' + $show_inactive)">
+            {% trans "Awansuj" %}
+          </button>
+        </div>
+      {% elif worker and worker.user %}
+        <div class="divider opacity-10 my-6"></div>
+        <div class="bg-base-200/50 p-4 rounded-xl border border-base-300 space-y-4 text-base-content">
+          <div class="flex justify-between items-center">
+            <div class="flex items-center gap-3">
+              <div class="bg-primary/10 text-primary rounded-lg p-2 shadow-sm border border-primary/20">
+                <svg xmlns="http://www.w3.org/2000/svg"
+                     fill="none"
+                     viewBox="0 0 24 24"
+                     stroke-width="2.5"
+                     stroke="currentColor"
+                     class="w-4 h-4">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                </svg>
+              </div>
+              <div>
+                <div class="font-bold text-sm">{% trans "Aktywny Brygadzista" %}</div>
+                <div class="text-[11px] opacity-60">
+                  {% trans "Login" %}: <span class="font-mono font-bold">{{ worker.user.username }}</span>
+                </div>
+              </div>
+            </div>
+            <button type="button"
+                    class="btn btn-ghost btn-xs text-info hover:bg-info/10"
+                    data-on:click="@get('{% url 'business:worker_password_reset' pk=worker.id %}?search=' + $search + '&show_inactive=' + $show_inactive)">
+              {% trans "Resetuj hasło" %}
+            </button>
+          </div>
+          <div class="flex justify-end border-t border-base-300 pt-3">
+            <button type="button"
+                    class="btn btn-ghost btn-xs text-error opacity-60 hover:opacity-100"
+                    data-on:click="if(confirm('{% trans "Usunąć konto użytkownika?" %}')) @post('{% url 'business:worker_demote' pk=worker.id %}?search=' + $search + '&show_inactive=' + $show_inactive, {contentType: 'form', headers: getCsrfParams().headers})">
+              {% trans "Odbierz uprawnienia" %}
+            </button>
+          </div>
+        </div>
+      {% endif %}
+      <div class="modal-action mt-8 flex justify-between items-center border-t border-base-200 pt-4">
+        <div class="flex-1 flex justify-start">
+          {% if worker %}
+            <button type="button"
+                    class="btn btn-ghost btn-xs text-error/60 hover:text-error"
+                    data-on:click="if(confirm('{% trans "TRWAŁE USUNIĘCIE: Czy na pewno?" %}')) @post('{% url 'business:worker_delete' pk=worker.id %}?search=' + $search + '&show_inactive=' + $show_inactive, {contentType: 'form', headers: getCsrfParams().headers})">
+              {% trans "Usuń" %}
+            </button>
+          {% endif %}
+        </div>
+        <div class="flex gap-2">
+          <button type="button"
+                  class="btn btn-ghost btn-sm"
+                  data-on:click="$is_modal_open = false">{% trans "Anuluj" %}</button>
+          <button type="submit" class="btn btn-primary btn-sm px-10 shadow-lg">{% trans "Zapisz" %}</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+{% endpartialdef %}
+{% partialdef worker_promote_form %}
+<div id="modal-content"
+     class="modal-box max-w-lg bg-base-100 p-0 overflow-hidden border border-base-300 shadow-2xl max-h-[90vh] flex flex-col">
+  <div class="p-6 overflow-y-auto flex-grow">
+    <h3 class="font-bold text-xl mb-4 text-base-content">{{ title }}</h3>
+    {% if not is_password_reset %}
+      <div class="alert alert-info mb-6 text-sm bg-info/5 border-info/20 text-info-content">
+        <svg xmlns="http://www.w3.org/2000/svg"
+             fill="none"
+             viewBox="0 0 24 24"
+             class="stroke-current shrink-0 w-6 h-6">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
+          </path>
+        </svg>
+        <span>{% trans "Utworzenie konta pozwoli pracownikowi logować się do systemu jako Brygadzista." %}</span>
+      </div>
+    {% endif %}
+    <form id="promote-form"
+          data-on:submit__prevent="@post('{{ url }}?search=' + $search + '&show_inactive=' + $show_inactive, {contentType: 'form'})">
+      {% csrf_token %}
+      {% include "partials.html#non_field_errors" %}
+      <div class="flex flex-col gap-4">
+        {% for field in form %}
+          <div class="form-control w-full">
+            <label class="label">
+              <span class="label-text font-semibold">{{ field.label }}</span>
+            </label>
+            {{ field }}
+            {% if field.errors %}
+              <label class="label">
+                <span class="label-text-alt text-error">{{ field.errors.0 }}</span>
+              </label>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+      <div class="modal-action mt-8 pt-4 border-t border-base-200">
+        <button type="button"
+                class="btn btn-sm btn-ghost"
+                data-on:click="$is_modal_open = false">{% trans "Anuluj" %}</button>
+        <button type="submit" class="btn btn-sm btn-primary px-8 shadow-lg">{% trans "Zapisz" %}</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endpartialdef %}
+{% partialdef worker_history %}
+<div id="modal-content"
+     class="modal-box max-w-md bg-base-100 p-0 overflow-hidden border border-base-300 shadow-2xl max-h-[90vh] flex flex-col">
+  <div class="p-6 overflow-y-auto flex-grow">
+    <h3 class="font-bold text-lg mb-6 text-base-content">{% trans "Historia zatrudnienia" %}: {{ worker }}</h3>
+    <div class="space-y-4">
+      <ul class="timeline timeline-vertical timeline-compact">
+        {% for period in periods %}
+          <li>
+            {% if not forloop.first %}<hr class="bg-primary" />{% endif %}
+            <div class="timeline-middle">
+              <svg xmlns="http://www.w3.org/2000/svg"
+                   viewBox="0 0 20 20"
+                   fill="currentColor"
+                   class="w-5 h-5 {% if not period.end_date %}text-primary{% else %}text-base-content/30{% endif %}">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-11.25a.75.75 0 00-1.5 0v2.5h-2.5a.75.75 0 000 1.5h3.25a.75.75 0 00.75-.75v-3.25z" clip-rule="evenodd" />
+              </svg>
+            </div>
+            <div class="timeline-end timeline-box border-none bg-base-200/50 shadow-none text-sm py-2">
+              <div class="font-bold">
+                {{ period.start_date|date:"j E Y" }} —
+                {% if period.end_date %}
+                  {{ period.end_date|date:"j E Y" }}
+                {% else %}
+                  <span class="text-primary font-bold">{% trans "Obecnie pracuje" %}</span>
+                {% endif %}
+              </div>
+            </div>
+            {% if not forloop.last %}<hr class="bg-primary" />{% endif %}
+          </li>
+        {% empty %}
+          <div class="text-center py-4 opacity-50 italic text-sm text-base-content/60">
+            {% trans "Brak zarejestrowanej historii." %}
+          </div>
+        {% endfor %}
+      </ul>
+    </div>
+    <div class="modal-action mt-8 pt-4 border-t border-base-200">
+      <button type="button"
+              class="btn btn-sm btn-ghost"
+              data-on:click="$is_modal_open = false">{% trans "Zamknij" %}</button>
+    </div>
+  </div>
+</div>
+{% endpartialdef %}
 {% endblock content %}

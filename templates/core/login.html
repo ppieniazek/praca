@@ -10,10 +10,8 @@
         <form method="post">
           {% csrf_token %}
           {% include "partials.html#non_field_errors" %}
-          
           {% include "partials.html#form_field" with field=form.username %}
           {% include "partials.html#form_field" with field=form.password wrapper_class="mt-4" %}
-
           <div class="card-actions justify-end mt-6">
             <button type="submit" class="btn btn-primary w-full">Zaloguj</button>
           </div>

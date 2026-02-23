@@ -5,6 +5,8 @@ from core.models import Organization, User
 
 @pytest.mark.django_db
 class TestOrganizationModel:
+    """Testy modelu Organizacji."""
+
     def test_create_organization(self):
         org = Organization.objects.create(name="Test Corp")
         assert org.name == "Test Corp"
@@ -13,6 +15,8 @@ class TestOrganizationModel:
 
 @pytest.mark.django_db
 class TestUserModel:
+    """Testy modelu Użytkownika."""
+
     def test_create_user(self):
         org = Organization.objects.create(name="Test Corp")
         user = User.objects.create_user(
@@ -25,7 +29,7 @@ class TestUserModel:
         assert user.email == "test@example.com"
         assert user.check_password("password123")
         assert user.organization == org
-        assert user.role == User.Role.FOREMAN  # default
+        assert user.role == User.Role.FOREMAN
         assert not user.is_staff
         assert not user.is_superuser
         assert user.is_active

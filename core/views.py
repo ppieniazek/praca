@@ -9,6 +9,7 @@ from .forms import LoginForm, PasswordChangeForm, RegisterForm
 
 @require_http_methods(["GET", "POST"])
 def register_view(request):
+    """Widok rejestracji nowej organizacji i użytkownika głównego."""
     if request.user.is_authenticated:
         return redirect("core:dashboard")
 
@@ -29,6 +30,7 @@ def register_view(request):
 
 @require_http_methods(["GET", "POST"])
 def login_view(request):
+    """Widok logowania dla wszystkich użytkowników."""
     if request.user.is_authenticated:
         return redirect("core:dashboard")
 
@@ -51,6 +53,7 @@ def login_view(request):
 
 @require_http_methods(["POST"])
 def logout_view(request):
+    """Wylogowuje aktualnie zalogowanego użytkownika."""
     logout(request)
     messages.info(request, "Zostałeś wylogowany.")
     return redirect("core:login")
@@ -58,6 +61,7 @@ def logout_view(request):
 
 @login_required
 def dashboard_view(request):
+    """Odpowiada za wyświetlanie głównego panelu."""
     if request.user.must_change_password:
         return redirect("core:password_change")
     return render(request, "core/dashboard.html")
@@ -66,6 +70,7 @@ def dashboard_view(request):
 @login_required
 @require_http_methods(["GET", "POST"])
 def password_change_view(request):
+    """Widok wymuszonej lub manualnej zmiany hasła."""
     if request.method == "POST":
         form = PasswordChangeForm(request.POST)
         if form.is_valid():
