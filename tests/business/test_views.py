@@ -142,7 +142,7 @@ class TestWorkerViews:
         client.force_login(szef)
 
         promote_url = reverse("business:worker_promote", kwargs={"pk": worker.pk})
-        data = {"username": "brygadzista1", "password": "temporary_password"}
+        data = {"username": "brygadzista1", "password": "Temporary123"}
 
         response = client.post(promote_url, data)
         assert response.status_code == 200
@@ -216,12 +216,12 @@ class TestWorkerViews:
         client.force_login(szef)
 
         url = reverse("business:worker_password_reset", kwargs={"pk": worker.pk})
-        data = {"password": "new_very_secure_password"}
+        data = {"password": "New_very_secure123"}
         response = client.post(url, data)
         assert response.status_code == 200
 
         foreman_user.refresh_from_db()
-        assert foreman_user.check_password("new_very_secure_password")
+        assert foreman_user.check_password("New_very_secure123")
         assert foreman_user.must_change_password is True
 
     def test_foreman_cannot_edit_other_foreman(self, client):

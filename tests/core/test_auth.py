@@ -16,8 +16,8 @@ class TestAuthViews:
             "last_name": "Doe",
             "username": "newuser",
             "email": "new@corp.com",
-            "password": "password123",
-            "password_confirm": "password123",
+            "password": "StrongPass123!",
+            "password_confirm": "StrongPass123!",
         }
         response = client.post(url, data)
         assert response.status_code == 302
@@ -118,12 +118,12 @@ class TestAuthViews:
         client.force_login(user)
 
         url = reverse("core:password_change")
-        data = {"password": "newpassword123", "password_confirm": "newpassword123"}
+        data = {"password": "Newpassword123", "password_confirm": "Newpassword123"}
         response = client.post(url, data)
 
         assert response.status_code == 302
         assert response.url == reverse("core:dashboard")
 
         user.refresh_from_db()
-        assert user.check_password("newpassword123")
+        assert user.check_password("Newpassword123")
         assert user.must_change_password is False

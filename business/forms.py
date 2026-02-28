@@ -1,5 +1,7 @@
 from django import forms
 from django.contrib.auth import get_user_model
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 from django.utils import timezone
 
 from .models import Project, Vacation, WalletTransaction, Worker
@@ -199,6 +201,12 @@ class PromoteForm(forms.Form):
             raise forms.ValidationError("Użytkownik o tej nazwie już istnieje.")
         return username
 
+    def clean_password(self):
+        password = self.cleaned_data.get("password")
+        if password:
+            validate_password(password)
+        return password
+
 
 class PasswordResetForm(forms.Form):
     """Formularz resetowania hasła użytkownika."""
@@ -210,6 +218,12 @@ class PasswordResetForm(forms.Form):
         for name, field in self.fields.items():
             if "class" not in field.widget.attrs:
                 field.widget.attrs["class"] = "input input-bordered w-full"
+
+    def clean_password(self):
+        password = self.cleaned_data.get("password")
+        if password:
+            validate_password(password)
+        return password
 
 
 class ProjectForm(forms.ModelForm):

@@ -3,11 +3,15 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-&hq9j6+&9hhuxb4@9or-s0=ju1d!kvp8tmfi)q5!gm($wuj5p=")
+SECRET_KEY = os.getenv(
+    "SECRET_KEY", "django-insecure-&hq9j6+&9hhuxb4@9or-s0=ju1d!kvp8tmfi)q5!gm($wuj5p="
+)
 
 DEBUG = os.getenv("DEBUG", "True").lower() in ("true", "1", "t")
 
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "").split(",") if os.getenv("ALLOWED_HOSTS") else []
+ALLOWED_HOSTS = (
+    os.getenv("ALLOWED_HOSTS", "").split(",") if os.getenv("ALLOWED_HOSTS") else []
+)
 
 INSTALLED_APPS = [
     "daphne",
@@ -71,6 +75,9 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
+    },
+    {
+        "NAME": "core.validators.ComplexPasswordValidator",
     },
 ]
 

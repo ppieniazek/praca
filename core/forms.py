@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib.auth import authenticate
+from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
@@ -37,6 +38,12 @@ class RegisterForm(forms.Form):
 
         if email and User.objects.filter(email=email).exists():
             raise ValidationError(_("Użytkownik o tym adresie email już istnieje."))
+
+        if password:
+            try:
+                validate_password(password)
+            except ValidationError as e:
+                self.add_error("password", e)
 
         return cleaned_data
 
@@ -114,4 +121,11 @@ class PasswordChangeForm(forms.Form):
 
         if password and password_confirm and password != password_confirm:
             raise ValidationError(_("Hasła nie są takie same."))
+
+        if password:
+            try:
+                validate_password(password)
+            except ValidationError as e:
+                self.add_error("password", e)
+
         return cleaned_data
