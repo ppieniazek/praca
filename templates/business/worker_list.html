@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load i18n %}
 {% block title %}
-  {% trans "Lista pracowników" %} - PAVER-OS
+  {% trans "Lista pracowników" %} - Paver
 {% endblock title %}
 {% block content %}
   <div id="workers-dashboard">
@@ -13,15 +13,15 @@
           <input type="checkbox"
                  class="toggle toggle-xs toggle-primary"
                  data-bind="show_inactive"
-                 data-on:change="@get('{% url 'business:worker_list' %}?search=' + $search + '&show_inactive=' + $show_inactive)" />
+                 data-on:change="@get('{% url 'business:worker_list' %}', {filterSignals: {include: '^search|show_inactive$'}})" />
         </label>
         <input type="text"
                placeholder="{% trans 'Szukaj...' %}"
                class="input input-bordered input-sm w-full md:w-48"
                data-bind="search"
-               data-on:input__debounce.500ms="@get('{% url 'business:worker_list' %}?search=' + $search + '&show_inactive=' + $show_inactive)" />
+               data-on:input__debounce.500ms="@get('{% url 'business:worker_list' %}', {filterSignals: {include: '^search|show_inactive$'}})" />
         <button class="btn btn-primary btn-sm whitespace-nowrap px-6"
-                data-on:click="@get('{% url 'business:worker_create' %}?search=' + $search + '&show_inactive=' + $show_inactive)">
+                data-on:click="@get('{% url 'business:worker_create' %}', {filterSignals: {include: '^__none__$'}})">
           {% trans "Dodaj pracownika" %}
         </button>
       </div>
@@ -29,24 +29,26 @@
     <div class="card bg-base-100 shadow-xl overflow-hidden border border-base-300">
       <div class="card-body p-0">
         <div class="overflow-x-auto">
-          <table class="table table-md table-zebra w-full">
+          <table class="table table-md w-full">
             <thead class="hidden md:table-header-group">
               <tr class="bg-base-200/50 text-base-content/60 uppercase text-[10px] tracking-wider">
                 <th>{% trans "Imię i Nazwisko" %}</th>
                 <th>{% trans "Rola" %}</th>
                 <th>{% trans "Wynagrodzenie" %}</th>
+                <th>{% trans "Zaliczki" %}</th>
                 <th>{% trans "Telefon" %}</th>
                 <th>{% trans "Adres" %}</th>
-                <th class="hidden sm:table-cell">{% trans "Zatrudniony" %}</th>
+                <th class="hidden md:table-cell">{% trans "Zatrudniony" %}</th>
                 <th class="text-right">{% trans "Akcje" %}</th>
               </tr>
             </thead>
-            <tbody id="worker-list-body">
+            <tbody id="worker-list-body"
+                   class="md:table-row-group max-md:flex max-md:flex-col max-md:gap-4 max-md:p-2 max-md:bg-base-200/30 max-md:rounded-lg">
               {% partialdef worker_list_rows inline %}
               {% for worker in workers %}
                 <tr id="worker-row-{{ worker.id }}"
-                    class="{% if not worker.is_active %}opacity-40 grayscale{% endif %} hover group flex flex-col md:table-row bg-base-100 border-b border-base-200 mb-4 md:mb-0 rounded-box md:rounded-none shadow-sm md:shadow-none overflow-hidden">
-                  <td class="text-base-content font-bold md:font-normal text-base md:text-sm bg-base-200/30 md:bg-transparent flex justify-between items-center md:table-cell w-full">
+                    class="{% if not worker.is_active %}opacity-40 grayscale{% endif %} hover group flex flex-col md:table-row bg-base-100 md:bg-transparent md:even:bg-base-200/20 max-md:border max-md:border-base-300 md:border-b md:border-base-200 md:mb-0 max-md:rounded-xl md:rounded-none max-md:shadow-sm md:shadow-none overflow-hidden transition-all">
+                  <td class="text-base-content font-bold md:font-normal text-base md:text-sm bg-base-200/30 md:bg-transparent flex justify-between items-center md:table-cell w-full md:w-auto p-3 md:p-2">
                     <span>{{ worker.first_name }} {{ worker.last_name }}</span>
                     <span class="md:hidden">
                       {% if worker.user %}
@@ -63,31 +65,51 @@
                       <span class="badge badge-sm badge-outline opacity-40 font-medium">{% trans "Pracownik" %}</span>
                     {% endif %}
                   </td>
-                  <td class="flex justify-between md:table-cell border-b border-base-100/50 md:border-none p-3 md:p-2">
+                  <td class="flex justify-between md:table-cell p-4 md:p-2">
                     <span class="text-xs font-semibold opacity-50 uppercase md:hidden block">{% trans "Wynagrodzenie" %}</span>
                     <div>
                       <span class="text-base-content text-sm font-mono font-medium">{{ worker.hourly_rate }}</span>
                       <span class="text-[10px] opacity-40 uppercase ml-1">PLN/h</span>
                     </div>
                   </td>
-                  <td class="flex justify-between md:table-cell border-b border-base-100/50 md:border-none p-3 md:p-2">
+                  <td class="flex justify-between md:table-cell p-4 md:p-2">
+                    <span class="text-xs font-semibold opacity-50 uppercase md:hidden block">{% trans "Zaliczki" %}</span>
+                    <div class="flex items-center gap-1">
+                      <span class="text-error text-sm font-mono font-bold">{{ worker.get_total_advances }}</span>
+                      <span class="text-[10px] opacity-40 uppercase">PLN</span>
+                    </div>
+                  </td>
+                  <td class="flex justify-between md:table-cell p-4 md:p-2">
                     <span class="text-xs font-semibold opacity-50 uppercase md:hidden block">{% trans "Telefon" %}</span>
                     <span class="text-base-content/80 text-sm">{{ worker.phone|default:"-" }}</span>
                   </td>
-                  <td class="flex justify-between md:table-cell border-b border-base-100/50 md:border-none p-3 md:p-2">
+                  <td class="flex justify-between md:table-cell p-4 md:p-2">
                     <span class="text-xs font-semibold opacity-50 uppercase md:hidden block">{% trans "Adres" %}</span>
                     <span class="text-base-content/70 text-sm max-w-[200px] truncate block text-right md:text-left"
                           title="{{ worker.address }}">{{ worker.address|default:"-" }}</span>
                   </td>
-                  <td class="hidden sm:flex justify-between md:table-cell border-b border-base-100/50 md:border-none p-3 md:p-2">
+                  <td class="flex justify-between md:table-cell p-4 md:p-2">
                     <span class="text-xs font-semibold opacity-50 uppercase md:hidden block">{% trans "Zatrudniony" %}</span>
                     <span class="text-base-content/60 text-sm italic">{{ worker.hired_at|date:"d.m.Y" }}</span>
                   </td>
-                  <td class="text-right p-3 md:p-2 bg-base-50 md:bg-transparent">
+                  <td class="text-right p-4 md:p-2 max-md:bg-base-200/20 md:bg-transparent">
                     <div class="flex justify-end gap-2 md:gap-1">
-                      <button class="btn btn-ghost btn-sm md:btn-xs text-info hover:bg-info/10"
+                      <button class="btn btn-ghost btn-sm md:btn-xs text-error opacity-70 hover:opacity-100"
+                              title="{% trans 'Wypłać zaliczkę' %}"
+                              data-on:click="@get('{% url 'business:advance_create' %}?worker_id={{ worker.id }}&from_workers=true&search=' + $search + '&show_inactive=' + $show_inactive, {filterSignals: {include: '^__none__$'}})">
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                             fill="none"
+                             viewBox="0 0 24 24"
+                             stroke-width="1.5"
+                             stroke="currentColor"
+                             class="w-5 h-5 md:w-4 md:h-4">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span class="md:hidden ml-1 text-xs">{% trans "Zaliczka" %}</span>
+                      </button>
+                      <button class="btn btn-ghost btn-sm md:btn-xs opacity-70 hover:opacity-100"
                               title="{% trans 'Historia' %}"
-                              data-on:click="@get('{% url 'business:worker_history' pk=worker.id %}')">
+                              data-on:click="@get('{% url 'business:worker_history' pk=worker.id %}', {filterSignals: {include: '^__none__$'}})">
                         <svg xmlns="http://www.w3.org/2000/svg"
                              fill="none"
                              viewBox="0 0 24 24"
@@ -96,10 +118,22 @@
                              class="w-5 h-5 md:w-4 md:h-4">
                           <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        <span class="md:hidden ml-1 text-xs">{% trans "Historia" %}</span>
+                      </button>
+                      <button class="btn btn-ghost btn-sm md:btn-xs opacity-70 hover:opacity-100"
+                              title="{% trans 'Urlopy' %}"
+                              data-on:click="@get('{% url 'business:worker_vacations' pk=worker.id %}', {filterSignals: {include: '^__none__$'}})">
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                             fill="none"
+                             viewBox="0 0 24 24"
+                             stroke-width="1.5"
+                             stroke="currentColor"
+                             class="w-5 h-5 md:w-4 md:h-4">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+                        </svg>
+                        <span class="md:hidden ml-1 text-xs">{% trans "Urlopy" %}</span>
                       </button>
                       <button class="btn btn-ghost btn-sm md:btn-xs text-base-content border border-base-300 md:border-transparent hover:border-base-content shadow-sm md:shadow-none"
-                              data-on:click="@get('{% url 'business:worker_edit' pk=worker.id %}?search=' + $search + '&show_inactive=' + $show_inactive)">
+                              data-on:click="@get('{% url 'business:worker_edit' pk=worker.id %}', {filterSignals: {include: '^__none__$'}})">
                         {% trans "Edytuj" %}
                       </button>
                     </div>
@@ -107,7 +141,7 @@
                 </tr>
               {% empty %}
                 <tr>
-                  <td colspan="7"
+                  <td colspan="8"
                       class="text-center py-16 text-base-content/30 italic text-sm">
                     {% trans "Brak pracowników w tej kategorii." %}
                   </td>
@@ -181,14 +215,14 @@
       </div>
       {% if worker and not worker.user %}
         <div class="divider opacity-10 my-6"></div>
-        <div class="bg-info/5 border border-info/10 p-4 rounded-xl flex justify-between items-center">
+        <div class="bg-base-200/50 border border-base-300 p-4 rounded-xl flex justify-between items-center">
           <div>
-            <div class="font-bold text-sm text-info">{% trans "Mianuj Brygadzistą" %}</div>
+            <div class="font-bold text-sm text-base-content">{% trans "Mianuj Brygadzistą" %}</div>
             <div class="text-[11px] opacity-70">{% trans "Pracownik otrzyma dostęp do logowania." %}</div>
           </div>
           <button type="button"
-                  class="btn btn-sm btn-info"
-                  data-on:click="@get('{% url 'business:worker_promote' pk=worker.id %}?search=' + $search + '&show_inactive=' + $show_inactive)">
+                  class="btn btn-sm btn-primary"
+                  data-on:click="@get('{% url 'business:worker_promote' pk=worker.id %}?search=' + $search + '&show_inactive=' + $show_inactive, {filterSignals: {include: '^__none__$'}})">
             {% trans "Awansuj" %}
           </button>
         </div>
@@ -215,8 +249,8 @@
               </div>
             </div>
             <button type="button"
-                    class="btn btn-ghost btn-xs text-info hover:bg-info/10"
-                    data-on:click="@get('{% url 'business:worker_password_reset' pk=worker.id %}?search=' + $search + '&show_inactive=' + $show_inactive)">
+                    class="btn btn-ghost btn-xs opacity-70 hover:opacity-100"
+                    data-on:click="@get('{% url 'business:worker_password_reset' pk=worker.id %}?search=' + $search + '&show_inactive=' + $show_inactive, {filterSignals: {include: '^__none__$'}})">
               {% trans "Resetuj hasło" %}
             </button>
           </div>
@@ -256,7 +290,7 @@
   <div class="p-6 overflow-y-auto flex-grow">
     <h3 class="font-bold text-xl mb-4 text-base-content">{{ title }}</h3>
     {% if not is_password_reset %}
-      <div class="alert alert-info mb-6 text-sm bg-info/5 border-info/20 text-info-content">
+      <div class="alert alert-info mb-6 text-sm bg-base-200 border-base-300 text-base-content">
         <svg xmlns="http://www.w3.org/2000/svg"
              fill="none"
              viewBox="0 0 24 24"
@@ -338,6 +372,69 @@
               class="btn btn-sm btn-ghost"
               data-on:click="$is_modal_open = false">{% trans "Zamknij" %}</button>
     </div>
+  </div>
+</div>
+{% endpartialdef %}
+{% partialdef worker_vacations %}
+<div id="modal-content"
+     class="modal-box max-w-lg bg-base-100 p-0 overflow-hidden border border-base-300 shadow-2xl max-h-[90vh] flex flex-col">
+  <div class="p-6 overflow-y-auto flex-grow">
+    <div class="flex justify-between items-start mb-6">
+      <h3 class="font-bold text-xl text-base-content">
+        {% trans "Urlopy" %}: {{ worker.first_name }} {{ worker.last_name }}
+      </h3>
+      <button type="button"
+              class="btn btn-ghost btn-sm btn-circle"
+              data-on:click="$is_modal_open = false">✕</button>
+    </div>
+    <div class="space-y-4 mb-6">
+      <h4 class="font-bold text-lg text-base-content/80">{% trans "Nadchodzące i aktywne" %}</h4>
+      <div class="space-y-2">
+        {% for vacation in vacations %}
+          <div class="flex justify-between items-center p-3 bg-base-200/50 rounded-lg border border-base-300">
+            <div>
+              <div class="font-bold text-sm">{{ vacation.start_date|date:"d.m.Y" }} - {{ vacation.end_date|date:"d.m.Y" }}</div>
+              {% if vacation.description %}<div class="text-xs opacity-70 mt-1">{{ vacation.description }}</div>{% endif %}
+            </div>
+            {% if is_owner %}
+              <button type="button"
+                      class="btn btn-ghost btn-xs text-error opacity-70 hover:opacity-100"
+                      data-on:click="if(confirm('{% trans "Usunąć ten urlop?" %}')) @post('{% url 'business:vacation_delete' pk=vacation.id %}', {headers: getCsrfParams().headers, filterSignals: {include: '^__none__$'}})">
+                <svg xmlns="http://www.w3.org/2000/svg"
+                     viewBox="0 0 20 20"
+                     fill="currentColor"
+                     class="w-4 h-4">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" />
+                </svg>
+              </button>
+            {% endif %}
+          </div>
+        {% empty %}
+          <div class="text-center py-4 opacity-50 italic text-sm text-base-content/60 border rounded-lg border-dashed border-base-300">
+            {% trans "Pracownik nie ma zaplanowanych urlopów." %}
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% if is_owner %}
+      <div class="divider opacity-10 my-4"></div>
+      <form id="vacation-form"
+            data-on:submit__prevent="@post('{% url 'business:vacation_create' pk=worker.id %}', {contentType: 'form'})">
+        {% csrf_token %}
+        <h4 class="font-bold text-lg mb-3 text-base-content/80">{% trans "Zgłoś nowy urlop" %}</h4>
+        {% include "partials.html#non_field_errors" %}
+        <div class="space-y-3">
+          <div class="grid grid-cols-2 gap-3">
+            {% include "partials.html#form_field" with field=form.start_date %}
+            {% include "partials.html#form_field" with field=form.end_date %}
+          </div>
+          {% include "partials.html#form_field" with field=form.description %}
+        </div>
+        <div class="modal-action mt-6 pt-4 border-t border-base-200">
+          <button type="submit" class="btn btn-sm btn-primary px-8 shadow-sm">{% trans "Dodaj urlop" %}</button>
+        </div>
+      </form>
+    {% endif %}
   </div>
 </div>
 {% endpartialdef %}

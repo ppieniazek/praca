@@ -6,51 +6,159 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('business', '0003_worker_hired_at_employmentperiod'),
-        ('core', '0001_initial'),
+        ("business", "0003_worker_hired_at_employmentperiod"),
+        ("core", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Project',
+            name="Project",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=200, verbose_name='Nazwa projektu')),
-                ('client', models.CharField(max_length=200, verbose_name='Klient')),
-                ('status', models.CharField(choices=[('PLANNED', 'Planowany'), ('ACTIVE', 'Aktywny'), ('ARCHIVED', 'Zarchiwizowany')], default='ACTIVE', max_length=20, verbose_name='Status')),
-                ('is_base', models.BooleanField(default=False, help_text='Czy projekt jest bazą (np. warsztat)', verbose_name='Baza')),
-                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Data utworzenia')),
-                ('updated_at', models.DateTimeField(auto_now=True, verbose_name='Data aktualizacji')),
-                ('organization', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='projects', to='core.organization', verbose_name='Organizacja')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "name",
+                    models.CharField(max_length=200, verbose_name="Nazwa projektu"),
+                ),
+                ("client", models.CharField(max_length=200, verbose_name="Klient")),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("PLANNED", "Planowany"),
+                            ("ACTIVE", "Aktywny"),
+                            ("ARCHIVED", "Zarchiwizowany"),
+                        ],
+                        default="ACTIVE",
+                        max_length=20,
+                        verbose_name="Status",
+                    ),
+                ),
+                (
+                    "is_base",
+                    models.BooleanField(
+                        default=False,
+                        help_text="Czy projekt jest bazą (np. warsztat)",
+                        verbose_name="Baza",
+                    ),
+                ),
+                (
+                    "created_at",
+                    models.DateTimeField(
+                        auto_now_add=True, verbose_name="Data utworzenia"
+                    ),
+                ),
+                (
+                    "updated_at",
+                    models.DateTimeField(
+                        auto_now=True, verbose_name="Data aktualizacji"
+                    ),
+                ),
+                (
+                    "organization",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="projects",
+                        to="core.organization",
+                        verbose_name="Organizacja",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Projekt',
-                'verbose_name_plural': 'Projekty',
-                'ordering': ['-is_base', 'name'],
+                "verbose_name": "Projekt",
+                "verbose_name_plural": "Projekty",
+                "ordering": ["-is_base", "name"],
             },
         ),
         migrations.CreateModel(
-            name='WorkLog',
+            name="WorkLog",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('date', models.DateField(verbose_name='Data')),
-                ('hours', models.DecimalField(decimal_places=1, max_digits=4, verbose_name='Liczba godzin')),
-                ('is_premium', models.BooleanField(default=False, verbose_name='Premia')),
-                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Data utworzenia')),
-                ('updated_at', models.DateTimeField(auto_now=True, verbose_name='Data aktualizacji')),
-                ('created_by', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='created_work_logs', to=settings.AUTH_USER_MODEL, verbose_name='Utworzone przez')),
-                ('organization', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='work_logs', to='core.organization', verbose_name='Organizacja')),
-                ('project', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='work_logs', to='business.project', verbose_name='Projekt')),
-                ('worker', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='work_logs', to='business.worker', verbose_name='Pracownik')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("date", models.DateField(verbose_name="Data")),
+                (
+                    "hours",
+                    models.DecimalField(
+                        decimal_places=1, max_digits=4, verbose_name="Liczba godzin"
+                    ),
+                ),
+                (
+                    "is_premium",
+                    models.BooleanField(default=False, verbose_name="Premia"),
+                ),
+                (
+                    "created_at",
+                    models.DateTimeField(
+                        auto_now_add=True, verbose_name="Data utworzenia"
+                    ),
+                ),
+                (
+                    "updated_at",
+                    models.DateTimeField(
+                        auto_now=True, verbose_name="Data aktualizacji"
+                    ),
+                ),
+                (
+                    "created_by",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="created_work_logs",
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="Utworzone przez",
+                    ),
+                ),
+                (
+                    "organization",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="work_logs",
+                        to="core.organization",
+                        verbose_name="Organizacja",
+                    ),
+                ),
+                (
+                    "project",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="work_logs",
+                        to="business.project",
+                        verbose_name="Projekt",
+                    ),
+                ),
+                (
+                    "worker",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="work_logs",
+                        to="business.worker",
+                        verbose_name="Pracownik",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Wpis czasu pracy',
-                'verbose_name_plural': 'Wpisy czasu pracy',
-                'ordering': ['-date', 'worker'],
-                'unique_together': {('worker', 'date')},
+                "verbose_name": "Wpis czasu pracy",
+                "verbose_name_plural": "Wpisy czasu pracy",
+                "ordering": ["-date", "worker"],
+                "unique_together": {("worker", "date")},
             },
         ),
     ]

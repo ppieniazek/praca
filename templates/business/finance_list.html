@@ -1,0 +1,375 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}
+  {% trans "Finanse" %} - Paver
+{% endblock title %}
+{% block content %}
+  <div id="finance-list-dashboard" class="space-y-6">
+    {% partialdef finance_list_dashboard inline %}
+    <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+      <h1 class="text-2xl font-bold text-base-content">{% trans "Finanse" %}</h1>
+      <div class="flex gap-2">
+        <button class="btn btn-primary btn-sm shadow-sm"
+                data-on:click="@get('{% url 'business:expense_create' %}?from_list=true', {filterSignals: {include: '^__none__$'}})">
+          <svg xmlns="http://www.w3.org/2000/svg"
+               fill="none"
+               viewBox="0 0 24 24"
+               stroke-width="1.5"
+               stroke="currentColor"
+               class="w-4 h-4 mr-1">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+          </svg>
+          {% trans "Dodaj wydatek firmowy" %}
+        </button>
+        <button class="btn btn-outline btn-sm"
+                data-on:click="@get('{% url 'business:advance_create' %}?from_list=true', {filterSignals: {include: '^__none__$'}})">
+          <svg xmlns="http://www.w3.org/2000/svg"
+               fill="none"
+               viewBox="0 0 24 24"
+               stroke-width="1.5"
+               stroke="currentColor"
+               class="w-4 h-4 mr-1">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+          </svg>
+          {% trans "Wypłać zaliczkę firmową" %}
+        </button>
+      </div>
+      <div class="stats shadow bg-base-100 border border-base-300">
+        <div class="stat py-2 px-4">
+          <div class="stat-title text-xs uppercase opacity-50 font-bold">{% trans "Suma sald" %}</div>
+          <div class="stat-value text-primary text-xl">
+            {{ total_balance|floatformat:2 }} <span class="text-sm font-normal opacity-50">PLN</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      {% partialdef finance_list_content inline %}
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {% for w in wallets %}
+          <div class="card bg-base-100 shadow-sm border border-base-300 hover:border-primary/40 transition-colors">
+            <div class="card-body p-4 md:p-5 flex flex-col gap-4">
+              <div class="flex justify-between items-start gap-4">
+                <div>
+                  <h2 class="font-bold text-base-content leading-tight">{{ w.user.get_full_name|default:w.user.username }}</h2>
+                  <p class="text-[10px] opacity-60 uppercase font-bold tracking-wider mt-1">{% trans "Brygadzista" %}</p>
+                </div>
+              </div>
+              <div class="bg-base-200/50 rounded-lg p-3 flex flex-col justify-center border border-base-200/50">
+                <span class="text-[10px] uppercase font-bold opacity-50 mb-0.5 tracking-wider">{% trans "Aktualne saldo" %}</span>
+                <div class="text-xl md:text-2xl font-black {% if w.current_balance >= 0 %}text-success{% else %}text-error{% endif %}">
+                  {{ w.current_balance|floatformat:2 }} <span class="text-xs font-normal opacity-50">PLN</span>
+                </div>
+              </div>
+              <div class="flex items-center gap-2 mt-auto pt-2">
+                <a href="{% url 'business:finance_detail' w.pk %}"
+                   class="btn btn-primary btn-sm flex-1 shadow-sm">{% trans "Szczegóły" %}</a>
+                <button class="btn btn-outline btn-sm"
+                        title="{% trans 'Zasil z kasy głównej' %}"
+                        data-on:click="@get('{% url 'business:refill_create' %}?wallet_id={{ w.id }}&from_list=true', {filterSignals: {include: '^__none__$'}})">
+                  <svg xmlns="http://www.w3.org/2000/svg"
+                       fill="none"
+                       viewBox="0 0 24 24"
+                       stroke-width="2"
+                       stroke="currentColor"
+                       class="w-4 h-4">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        {% empty %}
+          <div class="col-span-full bg-base-100 rounded-2xl border border-dashed border-base-300 py-20 text-center">
+            <div class="opacity-30 mb-4 flex justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg"
+                   fill="none"
+                   viewBox="0 0 24 24"
+                   stroke-width="1"
+                   stroke="currentColor"
+                   class="w-16 h-16">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.91 11.672a.375.375 0 0 1 0 .656l-5.603 3.113a.375.375 0 0 1-.557-.328V8.887c0-.286.307-.466.557-.327l5.603 3.112Z" />
+              </svg>
+            </div>
+            <h3 class="text-lg font-medium opacity-50">{% trans "Brak aktywnych brygadzistów" %}</h3>
+            <p class="text-sm opacity-40 mt-1">{% trans "Finanse są tworzone automatycznie dla brygadzistów." %}</p>
+          </div>
+        {% endfor %}
+      </div>
+    {% endpartialdef %}
+  </div>
+  {% if user.is_owner and projects %}
+    <div class="card bg-base-100 shadow-sm border border-base-300 mt-8">
+      <div class="card-body p-0">
+        <div class="p-6 pb-0">
+          <h2 class="text-xl font-bold text-base-content">{% trans "Koszty Aktywnych Budów" %}</h2>
+          <p class="text-xs opacity-50 font-bold uppercase tracking-wider">
+            {% trans "Suma wydatków dla poszczególnych projektów" %}
+          </p>
+        </div>
+        <div class="overflow-x-auto mt-4">
+          <table class="table table-zebra w-full">
+            <thead>
+              <tr class="bg-base-200/50">
+                <th class="text-[10px] uppercase opacity-50">{% trans "Projekt" %}</th>
+                <th class="text-[10px] uppercase opacity-50">{% trans "Status" %}</th>
+                <th class="text-[10px] uppercase opacity-50 text-right">{% trans "Roboczogodziny" %}</th>
+                <th class="text-[10px] uppercase opacity-50 text-right">{% trans "Koszty (Wydatki)" %}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for p in projects %}
+                {% if p.status == 'ACTIVE' or p.total_project_cost > 0 %}
+                  <tr class="hover:bg-base-200/30 transition-colors">
+                    <td class="whitespace-nowrap font-bold text-sm">
+                      <button type="button"
+                              class="link link-hover text-left"
+                              data-on:click="@get('{% url 'business:project_detail' p.id %}', {filterSignals: {include: '^__none__$'}})">
+                        {{ p.name }}
+                      </button>
+                    </td>
+                    <td>
+                      <div class="badge badge-sm font-bold border-none shadow-sm {% if p.status == 'ACTIVE' %}bg-success/20 text-success{% elif p.status == 'PLANNED' %}bg-info/20 text-info{% elif p.status == 'COMPLETED' %}bg-neutral/20 text-neutral{% else %}bg-base-300 text-base-content{% endif %}">
+                        {{ p.get_status_display }}
+                      </div>
+                    </td>
+                    <td class="text-right">
+                      <span class="text-xs font-bold">{{ p.total_hours|default:"0"|floatformat:0 }} <span class="text-[10px] font-normal opacity-50">h</span></span>
+                    </td>
+                    <td class="text-right font-black text-error">
+                      {{ p.total_expense|default:"0"|floatformat:2 }} <span class="text-[10px] font-normal opacity-50">PLN</span>
+                    </td>
+                  </tr>
+                {% endif %}
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+  <div class="card bg-base-100 shadow-sm border border-base-300 mt-8">
+    <div class="card-body p-0">
+      <div class="p-6 pb-0">
+        <h2 class="text-xl font-bold text-base-content">{% trans "Ostatnia aktywność firmowa" %}</h2>
+        <p class="text-xs opacity-50 font-bold uppercase tracking-wider">{% trans "Zbiorcza historia transakcji" %}</p>
+      </div>
+      <div class="overflow-x-auto mt-4">
+        <table class="table table-zebra w-full">
+          <thead>
+            <tr class="bg-base-200/50">
+              <th class="text-[10px] uppercase opacity-50">{% trans "Data" %}</th>
+              <th class="text-[10px] uppercase opacity-50">{% trans "Typ / Brygadzista" %}</th>
+              <th class="text-[10px] uppercase opacity-50">{% trans "Opis / Pracownik" %}</th>
+              <th class="text-[10px] uppercase opacity-50 text-center">{% trans "Dowód" %}</th>
+              <th class="text-[10px] uppercase opacity-50 text-right">{% trans "Kwota" %}</th>
+              <th class="text-[10px] uppercase opacity-50 text-right">{% trans "Akcje" %}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for t in recent_transactions %}
+              <tr class="hover:bg-base-200/30 transition-colors">
+                <td class="whitespace-nowrap">
+                  <div class="text-xs font-bold opacity-70">{{ t.date|date:"d.m.Y" }}</div>
+                </td>
+                <td>
+                  <div class="flex items-center gap-2">
+                    {% if t.type == 'REFILL' %}
+                      <div class="p-1.5 bg-success/10 text-success rounded-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                             fill="none"
+                             viewBox="0 0 24 24"
+                             stroke-width="2"
+                             stroke="currentColor"
+                             class="w-4 h-4">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 10.5 12 3m0 0 7.5 7.5M12 3v18" />
+                        </svg>
+                      </div>
+                      <div>
+                        <div class="text-xs font-bold">{% trans "Zasilenie" %}</div>
+                        <div class="text-[10px] opacity-50 uppercase font-bold">
+                          {% if t.wallet %}
+                            {{ t.wallet.user.get_full_name|default:t.wallet.user.username }}
+                          {% else %}
+                            {% trans "Firmowa" %}
+                          {% endif %}
+                        </div>
+                      </div>
+                    {% elif t.type == 'EXPENSE' %}
+                      <div class="p-1.5 bg-error/10 text-error rounded-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                             fill="none"
+                             viewBox="0 0 24 24"
+                             stroke-width="2"
+                             stroke="currentColor"
+                             class="w-4 h-4">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <div class="flex items-center gap-1">
+                          <div class="text-xs font-bold">{% trans "Wydatek" %}</div>
+                          {% if t.receipt_image %}
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                 fill="none"
+                                 viewBox="0 0 24 24"
+                                 stroke-width="2"
+                                 stroke="currentColor"
+                                 class="w-3 h-3 text-primary animate-pulse">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="m18.375 12.739-7.693 7.693a4.5 4.5 0 0 1-6.364-6.364l10.94-10.94A3 3 0 1 1 19.5 7.372L8.552 18.32a1.5 1.5 0 1 1-2.121-2.121l10.94-10.94" />
+                            </svg>
+                          {% endif %}
+                        </div>
+                        <div class="text-[10px] opacity-50 uppercase font-bold">
+                          {% if t.wallet %}
+                            {{ t.wallet.user.get_full_name|default:t.wallet.user.username }}
+                          {% else %}
+                            {% trans "Firmowa" %}
+                          {% endif %}
+                        </div>
+                      </div>
+                    {% elif t.type == 'ADVANCE' %}
+                      <div class="p-1.5 bg-warning/10 text-warning rounded-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                             fill="none"
+                             viewBox="0 0 24 24"
+                             stroke-width="2"
+                             stroke="currentColor"
+                             class="w-4 h-4">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <div class="text-xs font-bold">{% trans "Zaliczka" %}</div>
+                        <div class="text-[10px] opacity-50 uppercase font-bold">
+                          {% if t.wallet %}
+                            {{ t.wallet.user.get_full_name|default:t.wallet.user.username }}
+                          {% else %}
+                            {% trans "Firmowa" %}
+                          {% endif %}
+                        </div>
+                      </div>
+                    {% endif %}
+                  </div>
+                </td>
+                <td>
+                  <div class="text-xs text-base-content/70 max-w-xs truncate">
+                    {% if t.type == 'ADVANCE' %}
+                      <span class="font-bold text-primary">{{ t.worker }}</span>
+                      {% if t.description %}<span class="opacity-50 ml-1">- {{ t.description }}</span>{% endif %}
+                    {% else %}
+                      {{ t.description|default:"---" }}
+                    {% endif %}
+                  </div>
+                </td>
+                <td class="text-center">
+                  {% if t.receipt_image %}
+                    <button data-on:click="@get('{% url 'business:transaction_receipt_modal' t.pk %}', {filterSignals: {include: '^__none__$'}})"
+                            class="group relative inline-block">
+                      <div class="avatar">
+                        <div class="w-10 h-10 rounded-lg ring-1 ring-base-300 group-hover:ring-primary transition-all overflow-hidden bg-base-200">
+                          <img src="{% url 'business:transaction_receipt' t.pk %}"
+                               alt="{% trans 'Dowód' %}"
+                               width="40"
+                               height="40"
+                               loading="lazy"
+                               class="object-cover w-full h-full" />
+                        </div>
+                      </div>
+                      <div class="absolute -top-1 -right-1 bg-primary text-white p-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                             fill="none"
+                             viewBox="0 0 24 24"
+                             stroke-width="2.5"
+                             stroke="currentColor"
+                             class="w-2.5 h-2.5">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                        </svg>
+                      </div>
+                    </button>
+                  {% else %}
+                    <span class="text-[10px] opacity-20 uppercase font-bold">{% trans "Brak" %}</span>
+                  {% endif %}
+                </td>
+                <td class="text-right">
+                  <div class="text-sm font-bold {% if t.type == 'REFILL' %}text-success{% elif t.type == 'EXPENSE' %}text-error{% else %}text-warning{% endif %}">
+                    {% if t.type == 'REFILL' %}
+                      +
+                    {% else %}
+                      -
+                    {% endif %}
+                    {{ t.amount|floatformat:2 }}
+                    <span class="text-[10px] opacity-40 ml-0.5">PLN</span>
+                  </div>
+                </td>
+                <td class="text-right">
+                  <div class="flex justify-end gap-1">
+                    <button aria-label="Edytuj" class="btn btn-ghost btn-xs opacity-40 hover:opacity-100"
+                            title="{% trans 'Edytuj' %}"
+                            data-on:click="@get('{% url 'business:transaction_edit' t.pk %}?from_list=true', {filterSignals: {include: '^__none__$'}})">
+                      <svg xmlns="http://www.w3.org/2000/svg"
+                           fill="none"
+                           viewBox="0 0 24 24"
+                           stroke-width="1.5"
+                           stroke="currentColor"
+                           class="w-3.5 h-3.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H4.5A2.25 2.25 0 0 1 2.25 18.75V6.75A2.25 2.25 0 0 1 4.5 4.5H9" />
+                      </svg>
+                    </button>
+                    <button aria-label="Usuń" class="btn btn-ghost btn-xs text-error opacity-40 hover:opacity-100"
+                            title="{% trans 'Usuń' %}"
+                            data-on:click="if(confirm('{% trans "Czy na pewno chcesz usunąć tę transakcję?" %}')) @post('{% url 'business:transaction_delete' t.pk %}?from_list=true', {headers: getCsrfParams().headers, filterSignals: {include: '^__none__$'}})">
+                      <svg xmlns="http://www.w3.org/2000/svg"
+                           fill="none"
+                           viewBox="0 0 24 24"
+                           stroke-width="1.5"
+                           stroke="currentColor"
+                           class="w-3.5 h-3.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                      </svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="6" class="py-12 text-center opacity-40 italic text-sm">{% trans "Brak ostatnich transakcji." %}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+{% endpartialdef %}
+</div>
+{% partialdef refill_form %}
+<div id="modal-content"
+     class="modal-box max-w-lg bg-base-100 p-0 overflow-hidden border border-base-300 shadow-2xl">
+  <div class="p-6">
+    <div class="flex justify-between items-start mb-6">
+      <h3 class="font-bold text-xl text-base-content">{{ title }}</h3>
+      <button type="button"
+              class="btn btn-ghost btn-sm btn-circle"
+              data-on:click="$is_modal_open = false">✕</button>
+    </div>
+    <form data-on:submit__prevent="@post('{{ url }}', {contentType: 'form'})">
+      {% csrf_token %}
+      {% include "partials.html#non_field_errors" %}
+      <div class="space-y-4">
+        {% include "partials.html#form_field" with field=form.amount %}
+        {% include "partials.html#form_field" with field=form.date %}
+        {% include "partials.html#form_field" with field=form.description %}
+      </div>
+      <div class="modal-action mt-8 border-t border-base-200 pt-4">
+        <button type="button"
+                class="btn btn-ghost btn-sm"
+                data-on:click="$is_modal_open = false">{% trans "Anuluj" %}</button>
+        <button type="submit" class="btn btn-primary btn-sm px-8 shadow-lg">{% trans "Zasil finanse" %}</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endpartialdef %}
+{% endblock content %}

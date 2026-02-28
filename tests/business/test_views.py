@@ -77,7 +77,9 @@ class TestWorkerViews:
         url = reverse("business:worker_list")
 
         response = client.get(
-            f"{url}?search=Target", headers={"datastar-request": "true"}
+            url,
+            data={"datastar": json.dumps({"search": "Target"})},
+            headers={"datastar-request": "true"},
         )
         assert response.status_code == 200
 

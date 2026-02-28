@@ -4,16 +4,20 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('business', '0004_project_worklog'),
-        ('core', '0001_initial'),
+        ("business", "0004_project_worklog"),
+        ("core", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='user',
-            name='visible_workers',
-            field=models.ManyToManyField(blank=True, related_name='visible_to', to='business.worker', verbose_name='Widoczni pracownicy'),
+            model_name="user",
+            name="visible_workers",
+            field=models.ManyToManyField(
+                blank=True,
+                related_name="visible_to",
+                to="business.worker",
+                verbose_name="Widoczni pracownicy",
+            ),
         ),
     ]

@@ -5,7 +5,7 @@ import pytest
 from django.urls import reverse
 from django.utils import timezone
 
-from business.models import Worker, WorkLog
+from business.models import Payroll, Vacation, Worker, WorkLog
 from core.models import Organization, User
 
 
@@ -52,7 +52,8 @@ class TestTimesheetViews:
         }
         url = reverse("business:timesheet_grid_partial")
         response = client.get(
-            f"{url}?datastar={json.dumps(signals)}",
+            url,
+            data={"datastar": json.dumps(signals)},
             headers={"datastar-request": "true"},
         )
         assert response.status_code == 200
@@ -208,3 +209,116 @@ class TestTimesheetViews:
 
         streaming_content = b"".join(list(response.streaming_content)).decode()
         assert "Nadpisano wpis" in streaming_content
+
+    def test_timesheet_update_vacation_warning(self, client):
+        org, owner, worker, _ = self.get_test_data()
+        client.force_login(owner)
+
+        now = timezone.now().date()
+        Vacation.objects.create(
+            organization=org,
+            worker=worker,
+            start_date=now,
+            end_date=now,
+            description="Urlop",
+        )
+
+        key = f"log_{now.year}_{now.month}_{worker.id}_{now.day}"
+        url = (
+            reverse("business:timesheet_update")
+            + f"?key={key}&year={now.year}&month={now.month}"
+        )
+        signals = {key: "8"}
+
+        response = client.post(
+            url,
+            data=json.dumps(signals),
+            content_type="application/json",
+            headers={"datastar-request": "true"},
+        )
+        assert response.status_code == 200
+        streaming_content = b"".join(list(response.streaming_content)).decode()
+        assert "ma zaplanowany urlop" in streaming_content
+
+    def test_timesheet_update_payroll_lock(self, client):
+        org, owner, worker, _ = self.get_test_data()
+        client.force_login(owner)
+
+        now = timezone.now().date()
+        Payroll.objects.create(
+            organization=org,
+            worker=worker,
+            year=now.year,
+            month=now.month,
+            status=Payroll.Status.CLOSED,
+            total_hours=0,
+            hourly_rate_snapshot=20,
+            gross_pay=0,
+            net_pay=0,
+            advances_deducted=0,
+        )
+
+        key = f"log_{now.year}_{now.month}_{worker.id}_{now.day}"
+        url = (
+            reverse("business:timesheet_update")
+            + f"?key={key}&year={now.year}&month={now.month}"
+        )
+        signals = {key: "8"}
+
+        response = client.post(
+            url,
+            data=json.dumps(signals),
+            content_type="application/json",
+            headers={"datastar-request": "true"},
+        )
+        assert response.status_code == 200
+        streaming_content = b"".join(list(response.streaming_content)).decode()
+        assert "Edycja zablokowana" in streaming_content
+        assert f"selector #cell-{worker.id}-{now.day}" in streaming_content
+
+        # Verify no log was created
+        assert not WorkLog.objects.filter(worker=worker, date=now).exists()
+
+    def test_timesheet_bulk_fill_payroll_lock(self, client):
+        org, owner, worker1, worker2 = self.get_test_data()
+        client.force_login(owner)
+
+        now = timezone.now().date()
+        # Close payroll for worker1 only
+        Payroll.objects.create(
+            organization=org,
+            worker=worker1,
+            year=now.year,
+            month=now.month,
+            status=Payroll.Status.CLOSED,
+            total_hours=0,
+            hourly_rate_snapshot=20,
+            gross_pay=0,
+            net_pay=0,
+            advances_deducted=0,
+        )
+
+        date_str = f"{now.year}-{now.month:02d}-{now.day:02d}"
+        url = f"{reverse('business:timesheet_bulk_fill')}?date={date_str}"
+        payload = {
+            f"workerVisible_{worker1.id}": True,
+            f"workerVisible_{worker2.id}": True,
+            f"bulkInput_{now.day}": "8",
+        }
+
+        response = client.post(
+            url,
+            data=json.dumps(payload),
+            content_type="application/json",
+            headers={"datastar-request": "true"},
+        )
+        assert response.status_code == 200
+        streaming_content = b"".join(list(response.streaming_content)).decode()
+
+        assert "Pominięto 1 pracowników" in streaming_content
+        assert f"miesiąc {now.month:02d}/{now.year} jest już zamknięty" in streaming_content
+
+        # Verify worker1 has no log, but worker2 has
+        assert not WorkLog.objects.filter(worker=worker1, date=now).exists()
+        assert WorkLog.objects.filter(worker=worker2, date=now, hours=8).exists()
+

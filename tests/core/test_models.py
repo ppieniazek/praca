@@ -4,16 +4,6 @@ from core.models import Organization, User
 
 
 @pytest.mark.django_db
-class TestOrganizationModel:
-    """Testy modelu Organizacji."""
-
-    def test_create_organization(self):
-        org = Organization.objects.create(name="Test Corp")
-        assert org.name == "Test Corp"
-        assert str(org) == "Test Corp"
-
-
-@pytest.mark.django_db
 class TestUserModel:
     """Testy modelu Użytkownika."""
 

@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}
+  {% trans "Lista projektów" %} - Paver
+{% endblock title %}
+{% block content %}
+  <div id="projects-dashboard">
+    <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+      <h1 class="text-2xl font-bold text-base-content">{% trans "Projekty" %}</h1>
+      <div class="flex flex-wrap gap-2 w-full md:w-auto items-center">
+        <input type="text"
+               placeholder="{% trans 'Szukaj projektu...' %}"
+               class="input input-bordered input-sm w-full md:w-48"
+               data-bind="search"
+               data-on:input__debounce.500ms="@get('{% url 'business:project_list' %}', {filterSignals: {include: '^search$'}})" />
+        {% if request.user.is_owner %}
+          <button class="btn btn-primary btn-sm whitespace-nowrap px-6"
+                  data-on:click="@get('{% url 'business:project_create' %}', {filterSignals: {include: '^__none__$'}})">
+            {% trans "Dodaj projekt" %}
+          </button>
+        {% endif %}
+      </div>
+    </div>
+    <div class="card bg-base-100 shadow-xl overflow-hidden border border-base-300">
+      <div class="card-body p-0">
+        <div class="overflow-x-auto">
+          <table class="table table-md w-full">
+            <thead class="hidden md:table-header-group">
+              <tr class="bg-base-200/50 text-base-content/60 uppercase text-[10px] tracking-wider">
+                <th class="w-1/4">{% trans "Nazwa Projektu" %}</th>
+                <th class="w-1/4 overflow-hidden">{% trans "Adres" %}</th>
+                <th class="hidden md:table-cell w-32">{% trans "Daty" %}</th>
+                <th class="text-right w-24 hidden md:table-cell">{% trans "Robocizna" %}</th>
+                <th class="text-right w-24 hidden md:table-cell">{% trans "Koszty" %}</th>
+                <th class="w-24">{% trans "Status" %}</th>
+                <th class="text-right w-20">{% trans "Akcje" %}</th>
+              </tr>
+            </thead>
+            <tbody id="project-list-body"
+                   class="md:table-row-group max-md:flex max-md:flex-col max-md:gap-4 max-md:p-2 max-md:bg-base-200/30 max-md:rounded-lg">
+              {% partialdef project_list_rows inline %}
+              {% for project in projects %}
+                <tr id="project-row-{{ project.id }}"
+                    class="{% if project.status == 'COMPLETED' %}opacity-50 grayscale{% endif %} hover group flex flex-col md:table-row bg-base-100 md:bg-transparent md:even:bg-base-200/20 max-md:border max-md:border-base-300 md:border-b md:border-base-200 md:mb-0 max-md:rounded-xl md:rounded-none max-md:shadow-sm md:shadow-none overflow-hidden transition-all">
+                  <td class="text-base-content font-bold md:font-normal text-base md:text-sm bg-base-200/30 md:bg-transparent flex justify-between items-center md:table-cell w-full md:w-auto p-3 md:p-2">
+                    <button type="button"
+                            class="link link-hover text-left"
+                            data-on:click="@get('{% url 'business:project_detail' project.id %}', {filterSignals: {include: '^__none__$'}})">
+                      {{ project.name }}
+                    </button>
+                    <span class="md:hidden">
+                      {% if project.status == 'PLANNED' %}
+                        <span class="badge badge-sm badge-info text-info-content">{% trans "Planowany" %}</span>
+                      {% elif project.status == 'ACTIVE' %}
+                        <span class="badge badge-sm badge-success text-success-content">{% trans "Aktywny" %}</span>
+                      {% else %}
+                        <span class="badge badge-sm bg-base-300 text-base-content/70 border-none">{% trans "Zakończony" %}</span>
+                      {% endif %}
+                    </span>
+                  </td>
+                  <td class="flex flex-col md:table-cell p-4 md:p-2 text-sm">
+                    <div class="md:hidden flex justify-between w-full mb-1">
+                      <span class="text-xs font-semibold opacity-50 uppercase">{% trans "Daty" %}</span>
+                      <span class="text-base-content/70">{{ project.start_date|date:"d.m.y"|default:"-" }} — {{ project.end_date|date:"d.m.y"|default:"-" }}</span>
+                    </div>
+                    <div class="md:hidden flex justify-between w-full">
+                      <span class="text-xs font-semibold opacity-50 uppercase">{% trans "Adres" %}</span>
+                      <span class="text-base-content/70 truncate max-w-[200px]"
+                            title="{{ project.address }}">{{ project.address|default:"-" }}</span>
+                    </div>
+                    <span class="hidden md:block text-base-content/70 max-w-[250px] lg:max-w-md xl:max-w-lg truncate"
+                          title="{{ project.address }}">{{ project.address|default:"-" }}</span>
+                  </td>
+                  <td class="hidden md:table-cell">
+                    <div class="text-xs text-base-content/70 flex flex-col gap-0.5">
+                      <span>{{ project.start_date|date:"d.m.y"|default:"-" }}</span>
+                      <span class="opacity-50">{{ project.end_date|date:"d.m.y"|default:"-" }}</span>
+                    </div>
+                  </td>
+                  <td class="flex flex-col md:table-cell p-4 md:p-2 md:text-right border-t border-base-200 md:border-t-0">
+                    <div class="md:hidden flex justify-between w-full mb-1">
+                      <span class="text-[10px] font-bold opacity-50 uppercase tracking-widest">{% trans "Roboczogodziny" %}</span>
+                      <span class="text-xs font-bold">{{ project.total_hours|default:"0"|floatformat:0 }} h</span>
+                    </div>
+                    <div class="md:hidden flex justify-between w-full mb-1">
+                      <span class="text-[10px] font-bold opacity-50 uppercase tracking-widest">{% trans "Wydatki" %}</span>
+                      <span class="text-xs font-bold {% if project.total_expense %}text-error{% else %}text-base-content/40{% endif %}">
+                        {{ project.total_expense|default:"0"|floatformat:2 }} PLN
+                      </span>
+                    </div>
+                    <div class="hidden md:flex flex-col gap-0.5 items-end justify-center h-full">
+                      <span class="text-sm font-bold opacity-80"
+                            title="{% trans 'Suma Roboczogodzin' %}">
+                        {{ project.total_hours|default:"0"|floatformat:0 }} <span class="font-normal text-[10px]">h</span>
+                      </span>
+                    </div>
+                  </td>
+                  <td class="hidden md:table-cell p-4 md:p-2 md:text-right">
+                    <div class="hidden md:flex flex-col gap-0.5 items-end justify-center h-full">
+                      <span class="text-sm font-black text-error"
+                            title="{% trans 'Suma Wydatków' %}">{{ project.total_expense|default:"0"|floatformat:2 }} <span class="text-[10px] opacity-50 font-normal">PLN</span></span>
+                    </div>
+                  </td>
+                  <td class="hidden md:table-cell">
+                    {% if project.status == 'PLANNED' %}
+                      <span class="badge badge-sm badge-info text-info-content">{% trans "Planowany" %}</span>
+                    {% elif project.status == 'ACTIVE' %}
+                      <span class="badge badge-sm badge-success text-success-content">{% trans "Aktywny" %}</span>
+                    {% else %}
+                      <span class="badge badge-sm bg-base-300 text-base-content/70 border-none">{% trans "Zakończony" %}</span>
+                    {% endif %}
+                  </td>
+                  <td class="text-right p-4 md:p-2 max-md:bg-base-200/20 md:bg-transparent">
+                    <div class="flex justify-end gap-2 md:gap-1">
+                      <button class="btn btn-ghost btn-sm md:btn-xs opacity-70 hover:opacity-100"
+                              title="{% trans 'Szczegóły' %}"
+                              data-on:click="@get('{% url 'business:project_detail' project.id %}', {filterSignals: {include: '^__none__$'}})">
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                             fill="none"
+                             viewBox="0 0 24 24"
+                             stroke-width="1.5"
+                             stroke="currentColor"
+                             class="w-5 h-5 md:w-4 md:h-4">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                        </svg>
+                        <span class="md:hidden ml-1 text-xs">{% trans "Szczegóły" %}</span>
+                      </button>
+                      {% if request.user.is_owner %}
+                        <button class="btn btn-ghost btn-sm md:btn-xs text-base-content border border-base-300 md:border-transparent hover:border-base-content shadow-sm md:shadow-none"
+                                data-on:click="@get('{% url 'business:project_edit' pk=project.id %}', {filterSignals: {include: '^__none__$'}})">
+                          {% trans "Edytuj" %}
+                        </button>
+                      {% endif %}
+                    </div>
+                  </td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="7"
+                      class="text-center py-16 text-base-content/30 italic text-sm">
+                    {% trans "Brak projektów. Dodaj nowy używając przycisku powyżej." %}
+                  </td>
+                </tr>
+              {% endfor %}
+            {% endpartialdef %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% partialdef project_form %}
+<div id="modal-content"
+     class="modal-box max-w-lg bg-base-100 p-0 overflow-hidden border border-base-300 shadow-2xl max-h-[90vh] flex flex-col">
+  <div class="p-6 overflow-y-auto flex-grow">
+    <div class="flex justify-between items-start mb-6">
+      <h3 class="font-bold text-xl text-base-content">{{ title }}</h3>
+      <button type="button"
+              class="btn btn-ghost btn-sm btn-circle"
+              data-on:click="$is_modal_open = false">✕</button>
+    </div>
+    <form id="project-form"
+          data-on:submit__prevent="@post('{{ url }}?search=' + $search, {contentType: 'form'})">
+      {% csrf_token %}
+      {% include "partials.html#non_field_errors" %}
+      <div class="space-y-4">
+        {% include "partials.html#form_field" with field=form.name %}
+        {% include "partials.html#form_field" with field=form.address %}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {% include "partials.html#form_field" with field=form.status %}
+        </div>
+      </div>
+      <div class="modal-action mt-8 flex justify-between items-center border-t border-base-200 pt-4">
+        <div class="flex-1 flex justify-start">
+          {% if project %}
+            <button type="button"
+                    class="btn btn-ghost btn-xs text-error/60 hover:text-error"
+                    data-on:click="if(confirm('{% trans "TRWAŁE USUNIĘCIE: Czy na pewno?" %}')) @post('{% url 'business:project_delete' pk=project.id %}?search=' + $search, {contentType: 'form', headers: getCsrfParams().headers})">
+              {% trans "Usuń" %}
+            </button>
+          {% endif %}
+        </div>
+        <div class="flex gap-2">
+          <button type="button"
+                  class="btn btn-ghost btn-sm"
+                  data-on:click="$is_modal_open = false">{% trans "Anuluj" %}</button>
+          <button type="submit" class="btn btn-primary btn-sm px-10 shadow-lg">{% trans "Zapisz" %}</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+{% endpartialdef %}
+{% endblock content %}

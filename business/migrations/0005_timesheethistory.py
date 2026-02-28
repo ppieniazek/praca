@@ -6,30 +6,81 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('business', '0004_project_worklog'),
-        ('core', '0002_user_visible_workers'),
+        ("business", "0004_project_worklog"),
+        ("core", "0002_user_visible_workers"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='TimesheetHistory',
+            name="TimesheetHistory",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('date', models.DateField(verbose_name='Data')),
-                ('old_hours', models.DecimalField(decimal_places=1, max_digits=4, verbose_name='Stara liczba godzin')),
-                ('new_hours', models.DecimalField(decimal_places=1, max_digits=4, verbose_name='Nowa liczba godzin')),
-                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Data utworzenia')),
-                ('changed_by', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='timesheet_changes', to=settings.AUTH_USER_MODEL, verbose_name='Zmienione przez')),
-                ('organization', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='timesheet_history', to='core.organization', verbose_name='Organizacja')),
-                ('worker', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='timesheet_history', to='business.worker', verbose_name='Pracownik')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("date", models.DateField(verbose_name="Data")),
+                (
+                    "old_hours",
+                    models.DecimalField(
+                        decimal_places=1,
+                        max_digits=4,
+                        verbose_name="Stara liczba godzin",
+                    ),
+                ),
+                (
+                    "new_hours",
+                    models.DecimalField(
+                        decimal_places=1,
+                        max_digits=4,
+                        verbose_name="Nowa liczba godzin",
+                    ),
+                ),
+                (
+                    "created_at",
+                    models.DateTimeField(
+                        auto_now_add=True, verbose_name="Data utworzenia"
+                    ),
+                ),
+                (
+                    "changed_by",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="timesheet_changes",
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="Zmienione przez",
+                    ),
+                ),
+                (
+                    "organization",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="timesheet_history",
+                        to="core.organization",
+                        verbose_name="Organizacja",
+                    ),
+                ),
+                (
+                    "worker",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="timesheet_history",
+                        to="business.worker",
+                        verbose_name="Pracownik",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Historia czasu pracy',
-                'verbose_name_plural': 'Historie czasu pracy',
-                'ordering': ['-created_at'],
+                "verbose_name": "Historia czasu pracy",
+                "verbose_name_plural": "Historie czasu pracy",
+                "ordering": ["-created_at"],
             },
         ),
     ]

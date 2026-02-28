@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}
+  {% trans "Wypłaty" %} - Paver
+{% endblock title %}
+{% block content %}
+  <div class="flex justify-between items-center mt-4 mb-6">
+    <div class="flex items-center gap-4">
+      <h1 class="text-3xl font-bold">{% trans "Wypłaty" %}</h1>
+    </div>
+  </div>
+  <div id="payroll-container"
+       data-replace-url="`?month={{ current_month }}&year={{ current_year }}`">
+    {% partialdef payroll_content inline %}
+    <div class="bg-base-100 rounded-xl shadow-sm border border-base-300 p-4 md:p-6 mb-8 flex flex-col md:flex-row justify-between items-center gap-4">
+      <div class="flex items-center gap-4">
+        <button aria-label="Poprzedni miesiąc" data-on:click="@get('{% url 'business:payroll_list' %}?year={% if current_month == 1 %}{{ current_year|add:'-1' }}{% else %}{{ current_year }}{% endif %}&month={% if current_month == 1 %}12{% else %}{{ current_month|add:'-1' }}{% endif %}', {filterSignals: {include: '^__none__$'}})"
+                class="btn btn-ghost btn-circle btn-sm">
+          <svg xmlns="http://www.w3.org/2000/svg"
+               class="h-5 w-5"
+               viewBox="0 0 20 20"
+               fill="currentColor">
+            <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+          </svg>
+        </button>
+        <div class="text-xl font-bold font-mono tracking-wider w-32 text-center">
+          {{ current_month|stringformat:"02d" }} / {{ current_year }}
+        </div>
+        <button aria-label="Następny miesiąc" data-on:click="@get('{% url 'business:payroll_list' %}?year={% if current_month == 12 %}{{ current_year|add:'1' }}{% else %}{{ current_year }}{% endif %}&month={% if current_month == 12 %}1{% else %}{{ current_month|add:'1' }}{% endif %}', {filterSignals: {include: '^__none__$'}})"
+                class="btn btn-ghost btn-circle btn-sm">
+          <svg xmlns="http://www.w3.org/2000/svg"
+               class="h-5 w-5"
+               viewBox="0 0 20 20"
+               fill="currentColor">
+            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+          </svg>
+        </button>
+      </div>
+      <div class="flex flex-wrap gap-2 items-center">
+        {% if stats.status == 'EMPTY' or stats.status == 'DRAFT' %}
+          <button class="btn btn-primary btn-sm"
+                  data-on:click="@post('{% url "business:payroll_generate" %}?year={{ current_year }}&month={{ current_month }}', {headers: getCsrfParams().headers, filterSignals: {include: '^__none__$'}})">
+            <svg xmlns="http://www.w3.org/2000/svg"
+                 fill="none"
+                 viewBox="0 0 24 24"
+                 stroke-width="1.5"
+                 stroke="currentColor"
+                 class="w-4 h-4 mr-1">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+            </svg>
+            {% trans "Przelicz" %}
+          </button>
+        {% endif %}
+        {% if stats.status == 'DRAFT' %}
+          <button class="btn btn-warning btn-sm"
+                  data-on:click="if(confirm('{% trans "Zakończyć miesiąc? Edycja godzin zostanie zablokowana." %}')) @post('{% url "business:payroll_close" %}?year={{ current_year }}&month={{ current_month }}', {headers: getCsrfParams().headers, filterSignals: {include: '^__none__$'}})">
+            <svg xmlns="http://www.w3.org/2000/svg"
+                 fill="none"
+                 viewBox="0 0 24 24"
+                 stroke-width="1.5"
+                 stroke="currentColor"
+                 class="w-4 h-4 mr-1">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+            </svg>
+            {% trans "Zamknij Miesiąc" %}
+          </button>
+        {% endif %}
+        {% if stats.status == 'CLOSED' and user.is_owner %}
+          <div class="flex gap-2">
+            <a href="{% url 'business:payroll_export_pdf' %}?year={{ current_year }}&month={{ current_month }}"
+               class="btn btn-primary btn-sm">
+              <svg xmlns="http://www.w3.org/2000/svg"
+                   fill="none"
+                   viewBox="0 0 24 24"
+                   stroke-width="1.5"
+                   stroke="currentColor"
+                   class="w-4 h-4 mr-1">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.844l6.24-6.24m0 0l6.24 6.24M12.96 7.604v12.48M5.28 4.744c0-1.104.896-2 2-2h10.44c1.104 0 2 .896 2 2v15.512c0 1.104-.896 2-2 2H7.28c-1.104 0-2-.896-2-2V4.744z" />
+              </svg>
+              PDF
+            </a>
+            <a href="{% url 'business:payroll_export_excel' %}?year={{ current_year }}&month={{ current_month }}"
+               class="btn btn-secondary btn-sm">
+              <svg xmlns="http://www.w3.org/2000/svg"
+                   fill="none"
+                   viewBox="0 0 24 24"
+                   stroke-width="1.5"
+                   stroke="currentColor"
+                   class="w-4 h-4 mr-1">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+              </svg>
+              EXCEL
+            </a>
+          </div>
+          <button class="btn btn-error btn-outline btn-sm"
+                  data-on:click="if(confirm('{% trans "Przywrócić do DRAFT i odblokować edycję?" %}')) @post('{% url "business:payroll_reopen" %}?year={{ current_year }}&month={{ current_month }}', {headers: getCsrfParams().headers, filterSignals: {include: '^__none__$'}})">
+            <svg xmlns="http://www.w3.org/2000/svg"
+                 fill="none"
+                 viewBox="0 0 24 24"
+                 stroke-width="1.5"
+                 stroke="currentColor"
+                 class="w-4 h-4 mr-1">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5V6.75a4.5 4.5 0 119 0v3.75M3.75 21.75h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H3.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+            </svg>
+            {% trans "Otwórz Ponownie" %}
+          </button>
+        {% endif %}
+      </div>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div class="bg-base-200/50 p-6 rounded-xl border border-base-300">
+        <h3 class="text-sm font-bold opacity-70 mb-1 uppercase tracking-wider">{% trans "Wypracowano" %}</h3>
+        <div class="text-2xl font-mono">
+          {{ stats.total_earned|floatformat:2 }} <span class="text-xs opacity-50 font-sans">PLN</span>
+        </div>
+      </div>
+      <div class="bg-base-200/50 p-6 rounded-xl border border-base-300">
+        <h3 class="text-sm font-bold opacity-70 mb-1 uppercase tracking-wider">{% trans "Bonusy" %}</h3>
+        <div class="text-2xl font-mono text-success">
+          +{{ stats.total_bonuses|floatformat:2 }} <span class="text-xs opacity-50 font-sans">PLN</span>
+        </div>
+      </div>
+      <div class="bg-base-200/50 p-6 rounded-xl border border-base-300">
+        <h3 class="text-sm font-bold opacity-70 mb-1 uppercase tracking-wider">{% trans "Potrącone Zaliczki" %}</h3>
+        <div class="text-2xl font-mono text-error">
+          {{ stats.total_advances|floatformat:2 }} <span class="text-xs opacity-50 font-sans">PLN</span>
+        </div>
+      </div>
+      <div class="bg-accent/10 p-6 rounded-xl border border-accent/20">
+        <h3 class="text-sm font-bold opacity-70 text-accent mb-1 uppercase tracking-wider">{% trans "Do Wypłaty" %}</h3>
+        <div class="text-2xl font-mono font-bold text-accent">
+          {{ stats.total_payout|floatformat:2 }} <span class="text-xs opacity-50 font-sans">PLN</span>
+        </div>
+      </div>
+    </div>
+    <div class="block w-full overflow-x-auto bg-base-100 rounded-xl shadow-sm border border-base-300">
+      <table class="table w-full whitespace-nowrap">
+        <thead>
+          <tr class="bg-base-200/50">
+            <th class="w-16 text-center text-xs font-bold opacity-70 uppercase tracking-wider">ID</th>
+            <th class="text-xs font-bold opacity-70 uppercase tracking-wider">{% trans "Pracownik" %}</th>
+            <th class="text-right text-xs font-bold opacity-70 uppercase tracking-wider">{% trans "Godziny" %}</th>
+            <th class="text-right text-xs font-bold opacity-70 uppercase tracking-wider">{% trans "Stawka" %}</th>
+            <th class="text-right text-xs font-bold opacity-70 uppercase tracking-wider">{% trans "Bonusy" %}</th>
+            <th class="text-right text-xs font-bold opacity-70 uppercase tracking-wider">{% trans "Wypracowano" %}</th>
+            <th class="text-right text-xs font-bold opacity-70 uppercase tracking-wider">{% trans "Potrącenia" %}</th>
+            <th class="text-right text-xs font-bold opacity-70 uppercase tracking-wider">{% trans "Do Wypłaty" %}</th>
+            <th class="text-center text-xs font-bold opacity-70 uppercase tracking-wider">{% trans "Status" %}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for payroll in payrolls %}
+            <tr role="row" class="hover flex flex-col md:table-row bg-base-100 md:bg-transparent md:even:bg-base-200/20 max-md:border max-md:border-base-300 md:border-b md:border-base-200 max-md:rounded-xl md:rounded-none max-md:shadow-sm overflow-hidden mb-3 md:mb-0">
+              <td role="cell" class="hidden md:table-cell text-center font-mono text-xs opacity-50">#{{ payroll.worker.id }}</td>
+              <td role="cell" class="font-bold text-base md:text-sm bg-base-200/30 md:bg-transparent flex justify-between items-center md:table-cell p-3 md:p-2">
+                <span>{{ payroll.worker.first_name }} {{ payroll.worker.last_name }}</span>
+                <span class="md:hidden">
+                  {% if payroll.status == 'CLOSED' %}
+                    <div class="badge badge-success badge-sm font-bold text-xs">{% trans "ZAMKNIĘTY" %}</div>
+                  {% else %}
+                    <div class="badge badge-warning badge-sm font-bold text-xs opacity-80">{% trans "ROBOCZY" %}</div>
+                  {% endif %}
+                </span>
+              </td>
+              <td role="cell" class="flex justify-between md:table-cell md:text-right p-3 md:p-2">
+                <span class="md:hidden text-xs font-bold opacity-50 uppercase">{% trans "Godziny" %}</span>
+                <span class="font-mono">{{ payroll.total_hours }}</span>
+              </td>
+              <td role="cell" class="flex justify-between md:table-cell md:text-right p-3 md:p-2">
+                <span class="md:hidden text-xs font-bold opacity-50 uppercase">{% trans "Stawka" %}</span>
+                <span class="font-mono">{{ payroll.hourly_rate_snapshot }} PLN/h</span>
+              </td>
+              <td role="cell" class="flex justify-between md:table-cell md:text-right p-3 md:p-2">
+                <span class="md:hidden text-xs font-bold opacity-50 uppercase">{% trans "Bonusy" %}</span>
+                <span class="font-mono text-success">{{ payroll.bonuses|floatformat:2 }}</span>
+              </td>
+              <td role="cell" class="flex justify-between md:table-cell md:text-right p-3 md:p-2">
+                <span class="md:hidden text-xs font-bold opacity-50 uppercase">{% trans "Wypracowano" %}</span>
+                <span class="font-mono">{{ payroll.gross_pay|floatformat:2 }}</span>
+              </td>
+              <td role="cell" class="flex justify-between md:table-cell md:text-right p-3 md:p-2">
+                <span class="md:hidden text-xs font-bold opacity-50 uppercase">{% trans "Potrącenia" %}</span>
+                <span class="font-mono text-error">{{ payroll.advances_deducted|floatformat:2 }}</span>
+              </td>
+              <td role="cell" class="flex justify-between md:table-cell md:text-right p-3 md:p-2">
+                <span class="md:hidden text-xs font-bold opacity-50 uppercase">{% trans "Do Wypłaty" %}</span>
+                <span class="font-mono font-bold">{{ payroll.net_pay|floatformat:2 }}</span>
+              </td>
+              <td role="cell" class="hidden md:table-cell text-center">
+                {% if payroll.status == 'CLOSED' %}
+                  <div class="badge badge-success badge-sm font-bold text-xs">{% trans "ZAMKNIĘTY" %}</div>
+                {% else %}
+                  <div class="badge badge-warning badge-sm font-bold text-xs opacity-80">{% trans "ROBOCZY" %}</div>
+                {% endif %}
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="9" class="text-center py-8 opacity-50 italic text-sm">
+                {% trans "Brak wygenerowanych list płac dla wybranego miesiąca. Kliknij 'Przelicz', aby wygenerować." %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endpartialdef %}
+</div>
+{% endblock content %}

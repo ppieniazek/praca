@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load i18n l10n %}
 {% block title %}
-    {% trans "Ewidencja Czasu Pracy" %} - PAVER-OS
+    {% trans "Ewidencja Czasu Pracy" %} - Paver
 {% endblock title %}
 {% block content %}
     {% partialdef timesheet_full_component inline %}
@@ -12,7 +12,7 @@
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <h1 class="text-2xl font-bold">{% trans "Ewidencja Czasu Pracy" %}</h1>
             <div class="flex flex-wrap items-center gap-4">
-                <button class="btn btn-outline btn-sm btn-accent w-full md:w-auto"
+                <button class="btn btn-outline btn-sm w-full md:w-auto"
                         data-on:click="@get('{% url 'business:timesheet_manage_workers' %}?month={{ current_month }}&year={{ current_year }}', {filterSignals: {include: '^workerVisible_'}})">
                     <svg xmlns="http://www.w3.org/2000/svg"
                          fill="none"
@@ -25,6 +25,32 @@
                     {% trans "Pracownicy" %}
                     <div class="badge badge-secondary badge-sm">{{ workers|length }}</div>
                 </button>
+                <button class="btn btn-primary btn-sm w-full md:w-auto"
+                        data-on:click="@get('{% url 'business:timesheet_assign_project' %}?month={{ current_month }}&year={{ current_year }}', {filterSignals: {include: '^workerVisible_'}})">
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                         fill="none"
+                         viewBox="0 0 24 24"
+                         stroke-width="1.5"
+                         stroke="currentColor"
+                         class="w-4 h-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25ZM6.75 12h.008v.008H6.75V12Zm0 3h.008v.008H6.75V15Zm0 3h.008v.008H6.75V18Z" />
+                    </svg>
+                    {% trans "Przypisz projekt" %}
+                </button>
+                {% if request.user.is_owner %}
+                <button class="btn btn-secondary btn-sm w-full md:w-auto"
+                        data-on:click="@get('{% url 'business:bonus_day_manage' %}?month={{ current_month }}&year={{ current_year }}', {filterSignals: {include: '^__none__$'}})">
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                         fill="none"
+                         viewBox="0 0 24 24"
+                         stroke-width="1.5"
+                         stroke="currentColor"
+                         class="w-4 h-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                    </svg>
+                    {% trans "Bonusy" %}
+                </button>
+                {% endif %}
                 <div class="flex items-center gap-2 bg-base-100 p-1 rounded-lg shadow-sm border border-base-300">
                     <button class="btn btn-ghost btn-sm"
                             data-on:click="@get('{% url 'business:timesheet_grid_partial' %}', {filterSignals: {include: '^workerVisible_'}})">
@@ -85,7 +111,7 @@
                                            pattern="[0-9]*"
                                            maxlength="2"
                                            data-bind="bulkInput_{{ day }}"
-                                           class="w-full h-full bg-base-100 text-center font-bold text-[11px] text-primary outline-none focus:shadow-[inset_0_0_0_1px_theme(colors.primary)] rounded-none cursor-text [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                           class="w-full h-full bg-base-100 text-center font-bold text-[11px] text-base-content outline-none focus:shadow-[inset_0_0_0_1px_theme(colors.base-content)] rounded-none cursor-text [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                            {% if day in future_days %}disabled{% endif %}
                                            data-on:keydown="if(evt.key === 'Enter') { evt.preventDefault(); if($bulkInput_{{ day }} !== '') { @post('{% url 'business:timesheet_bulk_fill' %}?date={{ current_year }}-{{ current_month|stringformat:'02d' }}-{{ day|stringformat:'02d' }}', {headers: getCsrfParams().headers, filterSignals: {include: '^workerVisible_|^bulkInput_{{ day }}$'}}); $editMode_{{ day }} = false; $bulkInput_{{ day }} = ''; } else { $editMode_{{ day }} = false; } }"
                                            data-on:blur="if($bulkInput_{{ day }} !== '') { @post('{% url 'business:timesheet_bulk_fill' %}?date={{ current_year }}-{{ current_month|stringformat:'02d' }}-{{ day|stringformat:'02d' }}', {headers: getCsrfParams().headers, filterSignals: {include: '^workerVisible_|^bulkInput_{{ day }}$'}}); $editMode_{{ day }} = false; $bulkInput_{{ day }} = '' } else { $editMode_{{ day }} = false }">
@@ -103,7 +129,7 @@
                                     <span class="truncate text-[11px] font-bold opacity-90">{{ worker.last_name }}</span>
                                     <span class="text-[9px] opacity-60 truncate">{{ worker.first_name }}</span>
                                     {% if request.user.is_owner %}
-                                        <button class="absolute right-0 top-1/2 -translate-y-1/2 p-1 flex items-center justify-center opacity-0 group-hover/row:opacity-100 transition-opacity rounded hover:bg-base-200 text-base-content/50 hover:text-primary"
+                                        <button class="absolute right-0 top-1/2 -translate-y-1/2 p-1 flex items-center justify-center opacity-0 group-hover/row:opacity-100 transition-opacity rounded hover:bg-base-200 text-base-content/50 hover:text-base-content"
                                                 title="Historia edycji"
                                                 data-on:click="@get('{% url 'business:timesheet_history' worker.pk %}', {filterSignals: {include: '^is_modal_open$'}})">
                                             <svg class="w-3.5 h-3.5"
@@ -130,9 +156,12 @@
                                                    data-bind="log_{{ current_year }}_{{ current_month }}_{{ worker.id }}_{{ day }}"
                                                    value="{% if log and log.hours %}{{ log.hours|floatformat:0 }}{% endif %}"
                                                    autocomplete="off"
-                                                   class="w-full h-full bg-transparent text-center font-medium text-[11px] outline-none transition-all {% if day not in future_days %}hover:bg-base-200 focus:bg-base-100 focus:shadow-[inset_0_0_0_1px_theme(colors.primary)] cursor-text{% else %}bg-base-200/50 cursor-not-allowed{% endif %} focus:z-20 relative z-0 rounded-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none {% if log %}font-bold text-primary{% else %}text-base-content/20 hover:text-base-content/60{% endif %} {% if log and log.created_by != request.user and not request.user.is_owner %}bg-warning/10 text-warning{% endif %}"
+                                                   class="w-full h-full bg-transparent text-center font-medium text-[11px] outline-none transition-all {% if day not in future_days %}hover:bg-base-200 focus:bg-base-100 focus:shadow-[inset_0_0_0_1px_theme(colors.base-content)] cursor-text{% else %}bg-base-200/50 cursor-not-allowed{% endif %} focus:z-20 relative z-0 rounded-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none {% if log %}font-bold text-base-content{% else %}text-base-content/20 hover:text-base-content/60{% endif %} {% if log and log.created_by != request.user and not request.user.is_owner %}bg-base-content/5 opacity-70{% endif %}"
                                                    {% if day in future_days %}disabled{% endif %}
-                                                   {% if log and log.created_by != request.user %}title="Oryginalnie wpisane przez: {{ log.created_by.username }}"{% endif %}
+                                                   {% if log %}title="{% if log.project and not log.project.is_default %}Projekt: {{ log.project.name }} {% endif %}
+                                                   {% if log.created_by != request.user %}(Wpisane przez: {{ log.created_by.get_full_name|default:log.created_by.username }}){% endif %}
+                                                   "
+                                                   {% endif %}
                                                    data-on:change="@post('{% url 'business:timesheet_update' %}?key=log_{{ current_year }}_{{ current_month }}_{{ worker.id }}_{{ day }}&year={{ current_year }}&month={{ current_month }}', {headers: getCsrfParams().headers, filterSignals: {include: '^log_{{ current_year }}_{{ current_month }}_{{ worker.id }}_{{ day }}$'}})">
                                         {% endlocalize %}
                                     </div>
@@ -159,7 +188,16 @@
                     class="btn btn-ghost btn-sm btn-circle"
                     data-on:click="$is_modal_open = false">✕</button>
         </div>
-        <div class="mb-4 max-h-80 overflow-y-auto">
+        <div class="mb-4">
+            <input type="text"
+                   placeholder="{% trans 'Szukaj pracownika...' %}"
+                   class="input input-bordered input-sm w-full"
+                   data-bind="search_workers"
+                   data-on:input__debounce.300ms="@get('{% url 'business:timesheet_manage_workers' %}?month={{ current_month }}&year={{ current_year }}', {filterSignals: {include: '^search_workers|workerVisible_.*$'}})">
+        </div>
+        {% partialdef timesheet_workers_list inline %}
+        <div id="timesheet-workers-list"
+             class="mb-4 max-h-80 overflow-y-auto pr-2">
             {% for worker in all_workers %}
                 <label class="flex items-center p-3 sm:p-2 hover:bg-base-200 rounded-lg cursor-pointer transition-colors mb-2 border border-base-200 sm:border-transparent">
                     <input type="checkbox"
@@ -172,19 +210,22 @@
                         {% endif %}
                     </span>
                 </label>
+            {% empty %}
+                <div class="text-center py-4 opacity-50 italic text-sm">{% trans "Brak widocznych wyników wyszukiwania." %}</div>
             {% endfor %}
         </div>
-        <div class="modal-action justify-between border-t border-base-200 pt-4">
-            <button type="button"
-                    class="btn btn-ghost"
-                    data-on:click="$is_modal_open = false">{% trans "Anuluj" %}</button>
-            <button type="button"
-                    class="btn btn-primary"
-                    data-on:click="$is_modal_open = false; @get('{% url 'business:timesheet_grid_partial' %}?month={{ current_month }}&year={{ current_year }}', {filterSignals: {include: '^workerVisible_'}})">
-                {% trans "Zapisz" %}
-            </button>
-        </div>
+    {% endpartialdef %}
+    <div class="modal-action justify-between border-t border-base-200 pt-4">
+        <button type="button"
+                class="btn btn-ghost"
+                data-on:click="$is_modal_open = false">{% trans "Anuluj" %}</button>
+        <button type="button"
+                class="btn btn-primary"
+                data-on:click="$is_modal_open = false; @get('{% url 'business:timesheet_grid_partial' %}?month={{ current_month }}&year={{ current_year }}', {filterSignals: {include: '^workerVisible_'}})">
+            {% trans "Zapisz" %}
+        </button>
     </div>
+</div>
 </div>
 {% endpartialdef %}
 {% partialdef timesheet_history_modal %}
@@ -221,26 +262,207 @@
                                     →
                                     <span class="font-mono bg-primary text-primary-content px-1 rounded">{{ item.new_hours|default:"0" }}h</span>
                                 </div>
-                                <div class="text-xs mt-2 opacity-75">{% trans "Przez:" %} {{ item.changed_by.username|default:"Nieznany" }}</div>
+                                <div class="text-xs mt-2 opacity-75">
+                                    {% trans "Przez:" %} {{ item.changed_by.get_full_name|default:item.changed_by.username|default:"Nieznany" }}
+                                </div>
                             </div>
                             {% if not forloop.last %}<hr class="bg-base-200" />{% endif %}
                         </li>
                     {% endfor %}
                 </ul>
             {% else %}
-                <div class="alert alert-info shadow-none bg-base-200 text-base-content/70 flex flex-col items-center justify-center p-8 border border-base-300">
-                    <svg xmlns="http://www.w3.org/2000/svg"
-                         fill="none"
-                         viewBox="0 0 24 24"
-                         class="w-12 h-12 stroke-current mb-4 opacity-50">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z">
-                        </path>
-                    </svg>
-                    <span>{% trans "Brak historii zmian dla tego pracownika." %}</span>
+                <div class="text-center py-12 opacity-50 italic text-sm text-base-content">
+                    {% trans "Brak historii zmian dla tego pracownika." %}
                 </div>
             {% endif %}
         </div>
         <div class="modal-action mt-6 border-t border-base-200 pt-4">
+            <button type="button"
+                    class="btn btn-ghost w-full"
+                    data-on:click="$is_modal_open = false">{% trans "Zamknij" %}</button>
+        </div>
+    </div>
+</div>
+{% endpartialdef %}
+{% partialdef timesheet_assign_project %}
+<div id="modal-content"
+     class="modal-box max-w-lg bg-base-100 p-0 overflow-hidden border border-base-300 shadow-2xl max-h-[90vh] flex flex-col">
+    <div class="p-6 overflow-y-auto flex-grow">
+        <div class="flex justify-between items-start mb-6">
+            <h3 class="font-bold text-xl text-base-content">{% trans "Przypisz projekt" %}</h3>
+            <button type="button"
+                    class="btn btn-ghost btn-sm btn-circle"
+                    data-on:click="$is_modal_open = false">✕</button>
+        </div>
+        <form data-on:submit__prevent="@post('{% url 'business:timesheet_assign_project_post' %}', {contentType: 'form', filterSignals: {include: '^workerVisible_'}})">
+            {% csrf_token %}
+            <div class="space-y-4">
+                <div class="form-control w-full">
+                    <label class="label">
+                        <span class="label-text font-semibold">{% trans "Pracownicy" %}</span>
+                    </label>
+                    <div class="bg-base-200/30 p-3 rounded-box max-h-48 overflow-y-auto space-y-2 border border-base-200">
+                        <label class="label cursor-pointer justify-start gap-3 hover:bg-base-200/50 p-2 rounded-lg transition-colors">
+                            <input type="checkbox"
+                                   class="checkbox checkbox-primary checkbox-sm"
+                                   data-on:change="document.querySelectorAll('.worker-checkbox').forEach(cb => { cb.checked = evt.target.checked; cb.dispatchEvent(new Event('change')) })">
+                            <span class="label-text font-bold">{% trans "Zaznacz wszystkich" %}</span>
+                        </label>
+                        <div class="divider my-0"></div>
+                        {% for worker in all_workers %}
+                            <label class="label cursor-pointer justify-start gap-3 hover:bg-base-200/50 p-2 rounded-lg transition-colors">
+                                <input type="checkbox"
+                                       name="worker_ids"
+                                       value="{{ worker.id }}"
+                                       class="checkbox checkbox-sm worker-checkbox"
+                                       data-bind="workerAssign_{{ worker.id }}">
+                                <span class="label-text">{{ worker.get_full_name|default:worker.last_name }}</span>
+                            </label>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="form-control w-full">
+                        <label class="label">
+                            <span class="label-text font-semibold">{% trans "Od dnia" %}</span>
+                        </label>
+                        <input type="date"
+                               name="start_date"
+                               required
+                               class="input input-bordered w-full"
+                               value="{{ current_year }}-{{ current_month|stringformat:'02d' }}-01">
+                    </div>
+                    <div class="form-control w-full">
+                        <label class="label">
+                            <span class="label-text font-semibold">{% trans "Do dnia" %}</span>
+                        </label>
+                        <input type="date"
+                               name="end_date"
+                               required
+                               class="input input-bordered w-full"
+                               value="{{ current_year }}-{{ current_month|stringformat:'02d' }}-{{ days|last }}">
+                    </div>
+                </div>
+                <div class="form-control w-full mt-4">
+                    <label class="label">
+                        <span class="label-text font-semibold">{% trans "Projekt" %}</span>
+                    </label>
+                    <select name="project_id" class="select select-bordered w-full" required>
+                        <option value="" disabled selected>{% trans "Wybierz projekt..." %}</option>
+                        {% for project in projects %}<option value="{{ project.id }}">{{ project.name }}</option>{% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="modal-action mt-8 flex justify-end gap-2 border-t border-base-200 pt-4">
+                <button type="button"
+                        class="btn btn-ghost btn-sm"
+                        data-on:click="$is_modal_open = false">{% trans "Anuluj" %}</button>
+                <button type="submit" class="btn btn-primary btn-sm px-10 shadow-lg">{% trans "Zapisz przypisanie" %}</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endpartialdef %}
+{% partialdef bonus_day_manage_modal %}
+<div id="modal-content"
+     class="modal-box max-w-lg bg-base-100 p-0 overflow-hidden border border-base-300 shadow-2xl max-h-[90vh] flex flex-col">
+    <div class="p-6 overflow-y-auto flex-grow">
+        <div class="flex justify-between items-start mb-6">
+            <h3 class="font-bold text-xl text-base-content">
+                {% trans "Zarządzaj bonusami" %} ({{ current_month|stringformat:"02d" }}/{{ current_year }})
+            </h3>
+            <button type="button"
+                    class="btn btn-ghost btn-sm btn-circle"
+                    data-on:click="$is_modal_open = false">✕</button>
+        </div>
+        {% if not is_closed %}
+            <div class="bg-base-200/50 p-4 rounded-xl mb-6 border border-base-300">
+                <h4 class="font-semibold text-sm mb-3 opacity-70 uppercase tracking-wider">{% trans "Dodaj nowy bonus" %}</h4>
+                <form data-on:submit__prevent="@post('{% url 'business:bonus_day_manage' %}?month={{ current_month }}&year={{ current_year }}', {contentType: 'form'})">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="add">
+                    <div class="grid grid-cols-2 gap-3 mb-3">
+                        <div class="form-control">
+                            <label class="label py-1">
+                                <span class="label-text text-xs">{% trans "Data" %}</span>
+                            </label>
+                            <input type="date"
+                                   name="date"
+                                   required
+                                   class="input input-bordered input-sm w-full"
+                                   value="{{ current_year }}-{{ current_month|stringformat:'02d' }}-01">
+                        </div>
+                        <div class="form-control">
+                            <label class="label py-1">
+                                <span class="label-text text-xs">{% trans "Kwota (PLN)" %}</span>
+                            </label>
+                            <input type="number"
+                                   name="amount"
+                                   required
+                                   class="input input-bordered input-sm w-full"
+                                   placeholder="np. 50">
+                        </div>
+                    </div>
+                    <div class="form-control mb-4">
+                        <label class="label py-1">
+                            <span class="label-text text-xs">{% trans "Opis (opcjonalnie)" %}</span>
+                        </label>
+                        <input type="text"
+                               name="description"
+                               class="input input-bordered input-sm w-full"
+                               placeholder="{% trans 'np. Premia za pogodę' %}">
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-sm w-full">{% trans "Dodaj bonus" %}</button>
+                </form>
+            </div>
+        {% else %}
+            <div class="alert alert-warning shadow-sm mb-6">
+                <svg xmlns="http://www.w3.org/2000/svg"
+                     class="stroke-current shrink-0 h-6 w-6"
+                     fill="none"
+                     viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <span>{% trans "Miesiąc jest zamknięty. Nie można dodawać ani usuwać bonusów." %}</span>
+            </div>
+        {% endif %}
+        <div class="space-y-3">
+            <h4 class="font-semibold text-sm opacity-70 uppercase tracking-wider">{% trans "Istniejące bonusy" %}</h4>
+            {% for bonus in bonus_days %}
+                <div class="flex items-center justify-between p-3 bg-base-100 border border-base-200 rounded-lg hover:border-primary/30 transition-colors group">
+                    <div class="flex flex-col">
+                        <span class="font-bold text-sm">{{ bonus.date|date:"d.m.Y" }}</span>
+                        <span class="text-xs opacity-60">{{ bonus.description|default:"---" }}</span>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <span class="badge badge-secondary font-mono font-bold">+{{ bonus.amount }} PLN</span>
+                        {% if not is_closed %}
+                            <form data-on:submit__prevent="@post('{% url 'business:bonus_day_manage' %}?month={{ current_month }}&year={{ current_year }}', {contentType: 'form'})">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="delete">
+                                <input type="hidden" name="bonus_id" value="{{ bonus.id }}">
+                                <button type="submit"
+                                        class="btn btn-ghost btn-xs btn-square text-error opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <svg xmlns="http://www.w3.org/2000/svg"
+                                         fill="none"
+                                         viewBox="0 0 24 24"
+                                         stroke-width="1.5"
+                                         stroke="currentColor"
+                                         class="w-4 h-4">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                                    </svg>
+                                </button>
+                            </form>
+                        {% endif %}
+                    </div>
+                </div>
+            {% empty %}
+                <div class="text-center py-8 opacity-40 italic text-sm">
+                    {% trans "Brak zdefiniowanych bonusów dla tego miesiąca." %}
+                </div>
+            {% endfor %}
+        </div>
+        <div class="modal-action mt-8 border-t border-base-200 pt-4">
             <button type="button"
                     class="btn btn-ghost w-full"
                     data-on:click="$is_modal_open = false">{% trans "Zamknij" %}</button>

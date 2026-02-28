@@ -1,16 +1,20 @@
 {% extends "base.html" %}
 {% block title %}
-  Rejestracja - PAVER-OS
+  Rejestracja - Paver
 {% endblock title %}
 {% block content %}
   <div class="flex items-center justify-center min-h-[calc(100vh-200px)]">
-    <div id="auth-card" class="card w-full max-w-md bg-base-100 shadow-xl">
+    <div id="auth-card" class="card w-full max-w-md bg-base-100 shadow-2xl">
       <div class="card-body">
         <h2 class="card-title justify-center text-2xl font-bold mb-4">Zarejestruj firmę</h2>
         <form method="post">
           {% csrf_token %}
           {% include "partials.html#non_field_errors" %}
           {% include "partials.html#form_field" with field=form.company_name %}
+          <div class="grid grid-cols-2 gap-4 mt-4">
+            {% include "partials.html#form_field" with field=form.first_name %}
+            {% include "partials.html#form_field" with field=form.last_name %}
+          </div>
           {% include "partials.html#form_field" with field=form.username wrapper_class="mt-4" %}
           {% include "partials.html#form_field" with field=form.email wrapper_class="mt-4" %}
           {% include "partials.html#form_field" with field=form.password wrapper_class="mt-4" %}

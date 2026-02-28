@@ -8,12 +8,19 @@ from .models import Organization, User
 
 class RegisterForm(forms.Form):
     company_name = forms.CharField(label=_("Nazwa firmy"), max_length=200)
+    first_name = forms.CharField(label=_("Imię"), max_length=150)
+    last_name = forms.CharField(label=_("Nazwisko"), max_length=150)
     username = forms.CharField(label=_("Nazwa użytkownika"), max_length=150)
     email = forms.EmailField(label=_("Email (opcjonalnie)"), required=False)
     password = forms.CharField(label=_("Hasło"), widget=forms.PasswordInput)
     password_confirm = forms.CharField(
         label=_("Potwierdź hasło"), widget=forms.PasswordInput
     )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs["class"] = "input input-bordered w-full"
 
     def clean(self):
         cleaned_data = super().clean()
@@ -34,8 +41,9 @@ class RegisterForm(forms.Form):
         return cleaned_data
 
     def save(self):
-        """Tworzy nową organizację oraz użytkownika o roli OWNER."""
         company_name = self.cleaned_data["company_name"]
+        first_name = self.cleaned_data["first_name"]
+        last_name = self.cleaned_data["last_name"]
         username = self.cleaned_data["username"]
         email = self.cleaned_data.get("email")
         password = self.cleaned_data["password"]
@@ -43,6 +51,8 @@ class RegisterForm(forms.Form):
         org = Organization.objects.create(name=company_name)
         user = User.objects.create_user(
             username=username,
+            first_name=first_name,
+            last_name=last_name,
             email=email,
             password=password,
             organization=org,
@@ -59,6 +69,8 @@ class LoginForm(forms.Form):
         self.request = request
         self.user_cache = None
         super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs["class"] = "input input-bordered w-full"
 
     def clean(self):
         username = self.cleaned_data.get("username")
@@ -89,6 +101,11 @@ class PasswordChangeForm(forms.Form):
     password_confirm = forms.CharField(
         label=_("Potwierdź nowe hasło"), widget=forms.PasswordInput
     )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs["class"] = "input input-bordered w-full"
 
     def clean(self):
         cleaned_data = super().clean()

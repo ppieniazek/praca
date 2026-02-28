@@ -25,6 +25,8 @@ class User(AbstractBaseUser, PermissionsMixin):
         FOREMAN = "FOREMAN", "Brygadzista"
 
     username = models.CharField(_("Nazwa użytkownika"), max_length=150, unique=True)
+    first_name = models.CharField(_("Imię"), max_length=150, blank=True)
+    last_name = models.CharField(_("Nazwisko"), max_length=150, blank=True)
     email = models.EmailField(_("Adres email"), unique=True, null=True, blank=True)
     organization = models.ForeignKey(
         Organization,
@@ -63,3 +65,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     @property
     def is_owner(self) -> bool:
         return self.role == self.Role.OWNER
+
+    def get_full_name(self) -> str:
+        if hasattr(self, "worker_profile") and self.worker_profile:
+            return f"{self.worker_profile.first_name} {self.worker_profile.last_name}".strip()
+        if self.first_name or self.last_name:
+            return f"{self.first_name} {self.last_name}".strip()
+        return self.username

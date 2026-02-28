@@ -5,33 +5,89 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('core', '0001_initial'),
+        ("core", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Worker',
+            name="Worker",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('first_name', models.CharField(max_length=100, verbose_name='Imię')),
-                ('last_name', models.CharField(max_length=100, verbose_name='Nazwisko')),
-                ('hourly_rate', models.PositiveIntegerField(help_text='Wartość całkowita w PLN', verbose_name='Stawka godzinowa (PLN)')),
-                ('phone', models.CharField(blank=True, max_length=20, null=True, verbose_name='Numer telefonu')),
-                ('address', models.TextField(blank=True, null=True, verbose_name='Adres')),
-                ('notes', models.TextField(blank=True, help_text='Głównie uprawnienia na maszyny', null=True, verbose_name='Notatki/Uprawnienia')),
-                ('is_active', models.BooleanField(default=True, verbose_name='Aktywny')),
-                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Data utworzenia')),
-                ('updated_at', models.DateTimeField(auto_now=True, verbose_name='Data aktualizacji')),
-                ('organization', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='workers', to='core.organization', verbose_name='Organizacja')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("first_name", models.CharField(max_length=100, verbose_name="Imię")),
+                (
+                    "last_name",
+                    models.CharField(max_length=100, verbose_name="Nazwisko"),
+                ),
+                (
+                    "hourly_rate",
+                    models.PositiveIntegerField(
+                        help_text="Wartość całkowita w PLN",
+                        verbose_name="Stawka godzinowa (PLN)",
+                    ),
+                ),
+                (
+                    "phone",
+                    models.CharField(
+                        blank=True,
+                        max_length=20,
+                        null=True,
+                        verbose_name="Numer telefonu",
+                    ),
+                ),
+                (
+                    "address",
+                    models.TextField(blank=True, null=True, verbose_name="Adres"),
+                ),
+                (
+                    "notes",
+                    models.TextField(
+                        blank=True,
+                        help_text="Głównie uprawnienia na maszyny",
+                        null=True,
+                        verbose_name="Notatki/Uprawnienia",
+                    ),
+                ),
+                (
+                    "is_active",
+                    models.BooleanField(default=True, verbose_name="Aktywny"),
+                ),
+                (
+                    "created_at",
+                    models.DateTimeField(
+                        auto_now_add=True, verbose_name="Data utworzenia"
+                    ),
+                ),
+                (
+                    "updated_at",
+                    models.DateTimeField(
+                        auto_now=True, verbose_name="Data aktualizacji"
+                    ),
+                ),
+                (
+                    "organization",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="workers",
+                        to="core.organization",
+                        verbose_name="Organizacja",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Pracownik',
-                'verbose_name_plural': 'Pracownicy',
-                'ordering': ['last_name', 'first_name'],
+                "verbose_name": "Pracownik",
+                "verbose_name_plural": "Pracownicy",
+                "ordering": ["last_name", "first_name"],
             },
         ),
     ]

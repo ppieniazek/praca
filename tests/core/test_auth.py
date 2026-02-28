@@ -12,6 +12,8 @@ class TestAuthViews:
         url = reverse("core:register")
         data = {
             "company_name": "New Corp",
+            "first_name": "John",
+            "last_name": "Doe",
             "username": "newuser",
             "email": "new@corp.com",
             "password": "password123",
@@ -25,6 +27,8 @@ class TestAuthViews:
         assert User.objects.filter(username="newuser").exists()
 
         user = User.objects.get(username="newuser")
+        assert user.first_name == "John"
+        assert user.last_name == "Doe"
         assert user.organization.name == "New Corp"
         assert user.is_owner
         assert int(client.session["_auth_user_id"]) == user.id
